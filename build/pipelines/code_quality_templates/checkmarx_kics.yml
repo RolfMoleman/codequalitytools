@@ -1,0 +1,134 @@
+steps:
+  - script: |
+      mkdir KICSReports
+      docker pull checkmarx/kics:latest
+      docker run \
+      --volume "$(pwd)":/Repo \
+      --volume "$(pwd)/repo_template/config":/config \
+      --volume $(System.DefaultWorkingDirectory)/KICSReports:/reports \
+      --name kics \
+      checkmarx/kics:latest scan \
+      -m \
+      --config /config/kics.config \
+      --output-name kics-report-$(environment_tag) \
+      --output-path /reports \
+      --log-path /reports/kics.log
+    condition: succeededOrFailed()
+    displayName: Run Checkmarx KICS
+    enabled: true
+    name: "KICS_Scan"
+    workingDirectory: "$(System.DefaultWorkingDirectory)"
+
+  # Create work items to review failures
+  - task: CreateWorkItem@1
+    condition: failed()
+    displayName: 'Create work item'
+    enabled: true
+    inputs:
+      #teamProject: # Optional
+      workItemType: 'Product Backlog Item'
+      title: 'Review Checkmarx KICS failures for $(project_repo) repository'
+      #assignedTo: # Optional
+      #areaPath: # Optional
+      #iterationPath: # Optional
+      fieldMappings: "Description=Please review the attached files and linked build" # Optional; Required if your process defines additional required work item fields
+      associate: true # Optional
+      associationType: 'foundinbuild' # Optional; Valid values: build, integratedInBuild, foundInBuild
+      # ===== Linking Inputs =====
+      #linkWorkItems: false # Optional
+      #linkType: # Required if linkWorkItems = true
+      #linkTarget: id # Optional; Valid values: id, wiql
+      #targetId: # Required if linkWorkItems = true and linkTarget = id
+      #targetWiql: # Required if linkWorkItems = true and linkTarget = wiql
+      limitWorkItemLinksToSameProject: true # Optional
+      linkPR: true # Optional
+      #linkCode: true # Optional
+      #commitsAndChangesets: # Required if linkCode = true
+      # ===== Attachments Inputs =====
+      addAttachments: true # Optional
+      attachmentsFolder: "$(System.DefaultWorkingDirectory)/KICSReports/" # Optional
+      attachments: '*.*' # Required if addAttachments = true
+      # ===== Duplicate Inputs =====
+      #preventDuplicates: false # Optional
+      #keyFields: # Required if preventDuplicates = true
+      #updateDuplicates: false # Optional
+      #updateRules: # Optional
+      # ===== Outputs Inputs =====
+      #createOutputs: false # Optional
+      #outputVariables: # Required if createOutputs = true
+      # ===== Advanced Inputs =====
+      #authToken: #Optional
+      #allowRedirectDowngrade: false # Optional  
+
+  #publish reports
+  - task: PublishBuildArtifacts@1
+    condition: succeededOrFailed()
+    displayName: "Publish KICS Reports"
+    enabled: true
+    name: "Publish_KICS_Reports"
+    inputs:
+      PathtoPublish: "$(System.DefaultWorkingDirectory)/KICSReports"
+      ArtifactName: "CheckmarxKICS-$(environment_tag)"
+      publishLocation: "container"
+
+  #copy sarif files to sarif directory to avoid polluting CodeAnalysisLogs
+  - task: Powershell@2
+    condition: succeededOrFailed()
+    displayName: "Copy Sarif Files"
+    enabled: true
+    inputs:
+      targetType: 'inline'
+      script: |
+        cd $(System.DefaultWorkingDirectory)/KICSReports
+        $files = dir
+        mkdir sarif
+        ForEach($file in $files)
+        {
+          if($file.extension.Contains("sarif"))
+          {
+              Copy-Item -Path $file.FullName -Destination sarif -Force
+          }
+          else
+          {
+              Write-output $file.FullName "does not need moving"
+          }      
+        }
+      showWarnings: true
+      pwsh: true
+      workingDirectory: '$(System.DefaultWorkingDirectory)'
+
+ #publish KICS Scan
+  - task: PublishBuildArtifacts@1
+    condition: succeededOrFailed()
+    displayName: "Publish KICS Scan"
+    enabled: true
+    name: "Publish_KICS_scan"
+    inputs:
+      PathtoPublish: "$(System.DefaultWorkingDirectory)/KICSReports/sarif"
+      ArtifactName: "CodeAnalysisLogs"
+      publishLocation: "container"
+
+  # Publish test results
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    displayName: "Publish KICS Test Results"
+    enabled: true
+    name: "Publish_KICS_Test_Results"
+    inputs:
+      testResultsFormat: "JUnit" # Options JUnit, NUnit, VSTest, xUnit, cTest
+      testResultsFiles: "**/*junit-kics-report-$(environment_tag).xml"
+      searchFolder: "$(System.DefaultWorkingDirectory)/KICSReports"
+      mergeTestResults: false
+      testRunTitle: "Checkmarx KICS Scan"
+      failTaskOnFailedTests: false
+      publishRunAttachments: true
+
+  # Clean up any of the containers / images that were used for quality checks
+  - bash: |
+      docker rmi "checkmarx/kics:latest" -f | true
+    condition: succeededOrFailed()
+    displayName: "Remove terraform Quality Check Docker Images"
+    enabled: true
+    name: "Remove_terraform_Quality_Check_Docker_Images"
+    workingDirectory: "$(System.DefaultWorkingDirectory)"
+    

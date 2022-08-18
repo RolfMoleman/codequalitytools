@@ -1,0 +1,139 @@
+steps:
+  # TFSec uses static analysis of terraform templates to spot potential security issues, and checks for violations of AWS, Azure and GCP security best practice recommendations.
+  # NOTE: To disable a specific check from analysis, include it in the command-line as follows: -e GEN001,GCP001,GCP002
+  # Documentation: https://github.com/tfsec/tfsec
+  - bash: |
+      mkdir TFSecReport
+      chmod a+w TFSecReport
+      docker pull aquasec/tfsec:latest
+      docker run \
+      --volume $(pwd):/Repo \
+      --volume $(System.DefaultWorkingDirectory)/TFSecReport:/reports \
+      --name tfsec \
+      aquasec/tfsec:latest \
+      /Repo \
+      --allow-checks-to-panic \
+      --force-all-dirs \
+      --format default,json,csv,checkstyle,junit,sarif,gif \
+      --include-ignored \
+      --include-passed \
+      --out /reports/tfsec-report-$(environment_tag) \
+      --verbose
+    condition: succeededOrFailed()
+    displayName: "TFSec Static Code Analysis"
+    enabled: true
+    name: "TFSec_Scan"
+    workingDirectory: "$(System.DefaultWorkingDirectory)"
+
+  # Create work items to review failures
+  - task: CreateWorkItem@1
+    condition: failed()
+    displayName: 'Create work item'
+    enabled: true
+    inputs:
+      #teamProject: # Optional
+      workItemType: 'Product Backlog Item'
+      title: 'Review TFSec failures for $(project_repo) repository'
+      #assignedTo: # Optional
+      #areaPath: # Optional
+      #iterationPath: # Optional
+      fieldMappings: "Description=Please review the attached files and linked build" # Optional; Required if your process defines additional required work item fields
+      associate: true # Optional
+      associationType: 'foundinbuild' # Optional; Valid values: build, integratedInBuild, foundInBuild
+      # ===== Linking Inputs =====
+      #linkWorkItems: false # Optional
+      #linkType: # Required if linkWorkItems = true
+      #linkTarget: id # Optional; Valid values: id, wiql
+      #targetId: # Required if linkWorkItems = true and linkTarget = id
+      #targetWiql: # Required if linkWorkItems = true and linkTarget = wiql
+      limitWorkItemLinksToSameProject: true # Optional
+      linkPR: true # Optional
+      #linkCode: true # Optional
+      #commitsAndChangesets: # Required if linkCode = true
+      # ===== Attachments Inputs =====
+      addAttachments: true # Optional
+      attachmentsFolder: "$(System.DefaultWorkingDirectory)/TFSecReport/" # Optional
+      attachments: '*.*' # Required if addAttachments = true
+      # ===== Duplicate Inputs =====
+      #preventDuplicates: false # Optional
+      #keyFields: # Required if preventDuplicates = true
+      #updateDuplicates: false # Optional
+      #updateRules: # Optional
+      # ===== Outputs Inputs =====
+      #createOutputs: false # Optional
+      #outputVariables: # Required if createOutputs = true
+      # ===== Advanced Inputs =====
+      #authToken: #Optional
+      #allowRedirectDowngrade: false # Optional
+
+  # Publish the TFSec report as an artifact to Azure Pipelines
+  - task: PublishBuildArtifacts@1
+    condition: succeededOrFailed()
+    displayName: "Publish TFSec Report"
+    enabled: true
+    name: "Publish_TFSec_Report"
+    inputs:
+      PathtoPublish: "$(System.DefaultWorkingDirectory)/TFSecReport"
+      ArtifactName: TFSecReport-$(environment_tag)
+
+  #copy sarif files to sarif directory to avoid polluting CodeAnalysisLogs
+  - task: Powershell@2
+    condition: succeededOrFailed()
+    displayName: "Copy Sarif Files"
+    enabled: true
+    inputs:
+      targetType: 'inline'
+      script: |
+        cd $(System.DefaultWorkingDirectory)/TFSecReport
+        $files = dir
+        mkdir sarif
+        ForEach($file in $files)
+        {
+          if($file.extension.Contains("sarif"))
+          {
+              Copy-Item -Path $file.FullName -Destination sarif -Force
+          }
+          else
+          {
+              Write-output $file.FullName "does not need moving"
+          }      
+        }
+      showWarnings: true
+      pwsh: true
+      workingDirectory: '$(System.DefaultWorkingDirectory)'
+
+  #publish tfsec Scan
+  - task: PublishBuildArtifacts@1
+    condition: succeededOrFailed()
+    displayName: "Publish tfsec Scan"
+    enabled: true
+    name: "Publish_tfsec_scan"
+    inputs:
+      PathtoPublish: "$(System.DefaultWorkingDirectory)/TFSecReport/sarif"
+      ArtifactName: "CodeAnalysisLogs"
+      publishLocation: "container"
+
+  # Publish the results of the TFSec analysis as Test Results to the pipeline
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    displayName: "Publish TFSecReport Test Results"
+    enabled: true
+    name: "Publish_TFSec_Test_Results"
+    inputs:
+      testResultsFormat: "JUnit" # Options JUnit, NUnit, VSTest, xUnit, cTest
+      testResultsFiles: "**/*TFSec-Report-$(environment_tag).xml"
+      searchFolder: "$(System.DefaultWorkingDirectory)/TFSecReport"
+      testRunTitle: "TFSec Scan"
+      mergeTestResults: false
+      failTaskOnFailedTests: false
+      publishRunAttachments: true
+
+  # Clean up any of the containers / images that were used for quality checks
+  - bash: |
+      docker rmi "aquasec/tfsec:latest" -f | true
+    condition: succeededOrFailed()
+    displayName: "Remove terraform Quality Check Docker Images"
+    enabled: true
+    name: "Remove_terraform_Quality_Check_Docker_Images"
+    workingDirectory: "$(System.DefaultWorkingDirectory)"
+    

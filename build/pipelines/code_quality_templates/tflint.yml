@@ -1,0 +1,187 @@
+steps:
+  # TFLint is a framework that finds possible errors (like illegal instance types) for major cloud providers (AWS/Azure/GCP), warn about deprecated syntax, unused declarations, and enforce best practices, naming conventions.
+  - task: qetza.replacetokens.replacetokens-task.replacetokens@5
+    condition: succeededOrFailed()
+    displayName: "Replace variablised versions in terraform"
+    enabled: true
+    name: "Terraform_Version_replacement"
+    inputs:
+        rootDirectory: '$(System.DefaultWorkingDirectory)/repo_template/build/terraform'
+        targetFiles: '**/*.tf'
+        encoding: 'auto'
+        tokenPattern: 'rm'
+        writeBOM: true
+        escapeType: 'none'
+        actionOnMissing: 'fail'
+        keepToken: true
+        actionOnNoFiles: 'warn'
+        enableTransforms: false
+        enableRecursion: false
+        useLegacyPattern: false
+        enableTelemetry: true
+  - script: |
+      mkdir TFLintReport
+      docker pull ghcr.io/terraform-linters/tflint-bundle:latest
+      outputTypes=("default" "json" "checkstyle" "junit" "compact" "sarif")
+      
+            for str in ${outputTypes[@]}; do
+        
+        if [[ "$str" == "default" ]]; then
+          docker run \
+            --volume $(pwd)/repo_template/build/terraform:/data \
+            ghcr.io/terraform-linters/tflint-bundle:latest \
+            --color \
+            --format $str > $(System.DefaultWorkingDirectory)/TFLintReport/TFLint-$str-report-$(environment_tag).txt
+
+        elif [[ "$str" == "json" ]]; then
+          docker run \
+            --volume $(pwd)/repo_template/build/terraform:/data \
+            ghcr.io/terraform-linters/tflint-bundle:latest \
+            --color \
+            --format $str > $(System.DefaultWorkingDirectory)/TFLintReport/TFLint-$str-report-$(environment_tag).json
+        elif [[ "$str" == "checkstyle" ]]; then
+            docker run \
+            --volume $(pwd)/repo_template/build/terraform:/data \
+            ghcr.io/terraform-linters/tflint-bundle:latest \
+            --color \
+            --format $str > $(System.DefaultWorkingDirectory)/TFLintReport/TFLint-$str-report-$(environment_tag).txt
+        elif [[ "$str" == "junit" ]]; then
+            docker run \
+            --volume $(pwd)/repo_template/build/terraform:/data \
+            ghcr.io/terraform-linters/tflint-bundle:latest \
+            --color \
+            --format $str > $(System.DefaultWorkingDirectory)/TFLintReport/TFLint-$str-report-$(environment_tag).xml
+        elif [[ "$str" == "compact" ]]; then
+            docker run \
+            --volume $(pwd)/repo_template/build/terraform:/data \
+            ghcr.io/terraform-linters/tflint-bundle:latest \
+            --color \
+            --format $str > $(System.DefaultWorkingDirectory)/TFLintReport/TFLint-$str-report-$(environment_tag).txt
+        elif [[ "$str" == "sarif" ]]; then
+          docker run \
+            --volume $(pwd)/repo_template/build/terraform:/data \
+            ghcr.io/terraform-linters/tflint-bundle:latest \
+            --color \
+            --format $str > $(System.DefaultWorkingDirectory)/TFLintReport/TFLint-$str-report-$(environment_tag).sarif
+      else
+          echo "output type not known"
+      fi
+      done
+    condition: succeededOrFailed()
+    displayName: "TFLint Static Code Analysis"
+    enabled: true
+    name: "TFLint_Scan"
+    workingDirectory: "$(System.DefaultWorkingDirectory)"
+
+  # Create work items to review failures
+  - task: CreateWorkItem@1
+    condition: failed()
+    displayName: 'Create work item'
+    enabled: true
+    inputs:
+      #teamProject: # Optional
+      workItemType: 'Product Backlog Item'
+      title: 'Review TFLint failures for $(project_repo) repository'
+      #assignedTo: # Optional
+      #areaPath: # Optional
+      #iterationPath: # Optional
+      fieldMappings: "Description=Please review the attached files and linked build" # Optional; Required if your process defines additional required work item fields
+      associate: true # Optional
+      associationType: 'foundinbuild' # Optional; Valid values: build, integratedInBuild, foundInBuild
+      # ===== Linking Inputs =====
+      #linkWorkItems: false # Optional
+      #linkType: # Required if linkWorkItems = true
+      #linkTarget: id # Optional; Valid values: id, wiql
+      #targetId: # Required if linkWorkItems = true and linkTarget = id
+      #targetWiql: # Required if linkWorkItems = true and linkTarget = wiql
+      limitWorkItemLinksToSameProject: true # Optional
+      linkPR: true # Optional
+      #linkCode: true # Optional
+      #commitsAndChangesets: # Required if linkCode = true
+      # ===== Attachments Inputs =====
+      addAttachments: true # Optional
+      attachmentsFolder: "$(System.DefaultWorkingDirectory)/TFLintReport/" # Optional
+      attachments: '*.*' # Required if addAttachments = true
+      # ===== Duplicate Inputs =====
+      #preventDuplicates: false # Optional
+      #keyFields: # Required if preventDuplicates = true
+      #updateDuplicates: false # Optional
+      #updateRules: # Optional
+      # ===== Outputs Inputs =====
+      #createOutputs: false # Optional
+      #outputVariables: # Required if createOutputs = true
+      # ===== Advanced Inputs =====
+      #authToken: #Optional
+      #allowRedirectDowngrade: false # Optional
+
+  # Publish the TFLint report as an artifact to Azure Pipelines
+  - task: PublishBuildArtifacts@1
+    condition: succeededOrFailed()
+    displayName: "Publish TFLint Report"
+    enabled: true
+    name: "Publish_TFLint_Report"
+    inputs:
+      PathtoPublish: "$(System.DefaultWorkingDirectory)/TFLintReport"
+      ArtifactName: TFLintReport-$(environment_tag)
+
+  #copy sarif files to sarif directory to avoid polluting CodeAnalysisLogs
+  - task: Powershell@2
+    condition: succeededOrFailed()
+    displayName: "Copy Sarif Files"
+    enabled: true
+    inputs:
+      targetType: 'inline'
+      script: |
+        cd $(System.DefaultWorkingDirectory)/TFLintReport
+        $files = dir
+        mkdir sarif
+        ForEach($file in $files)
+        {
+          if($file.extension.Contains("sarif"))
+          {
+              Copy-Item -Path $file.FullName -Destination sarif -Force
+          }
+          else
+          {
+              Write-output $file.FullName "does not need moving"
+          }      
+        }
+      showWarnings: true
+      pwsh: true
+      workingDirectory: '$(System.DefaultWorkingDirectory)'
+
+  #publish tflint Scan
+  - task: PublishBuildArtifacts@1
+    condition: succeededOrFailed()
+    displayName: "Publish tflint Scan"
+    enabled: true
+    name: "Publish_tflint_scan"
+    inputs:
+      PathtoPublish: "$(System.DefaultWorkingDirectory)/TFLintReport/sarif"
+      ArtifactName: "CodeAnalysisLogs"
+      publishLocation: "container"
+
+  # Publish the results of the TFLint analysis as Test Results to the pipeline
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    displayName: "Publish TFLint Test Results"
+    enabled: true
+    name: "Publish_TFLint_Test_Results"
+    inputs:
+      testResultsFormat: "JUnit" # Options JUnit, NUnit, VSTest, xUnit, cTest
+      testResultsFiles: "**/*TFLint-junit-report-$(environment_tag).xml"
+      searchFolder: "$(System.DefaultWorkingDirectory)/TFLintReport"
+      mergeTestResults: false
+      testRunTitle: "TFLint Scan"
+      failTaskOnFailedTests: false
+      publishRunAttachments: true
+
+  # Clean up any of the containers / images that were used for quality checks
+  - bash: |
+      docker rmi "ghcr.io/terraform-linters/tflint-bundle:latest" -f | true
+    condition: succeededOrFailed()
+    displayName: "Remove terraform Quality Check Docker Images"
+    enabled: true
+    name: "Remove_terraform_Quality_Check_Docker_Images"
+    workingDirectory: "$(System.DefaultWorkingDirectory)"
+    
