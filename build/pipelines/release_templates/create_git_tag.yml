@@ -1,0 +1,55 @@
+parameters:
+  - name: 'gitTag'
+    type: string
+
+  - name: 'gitMessage'
+    type: string
+    default: ''
+
+  - name: 'shouldRun'
+    type: string
+    default: true
+
+steps:
+  - pwsh: Write-Output "##vso[task.setvariable variable=computedRequestedFor]$(Build.RequestedFor)"
+    displayName: Default computedRequestedFor is Build.RequestedFor
+
+  - pwsh: Write-Output "##vso[task.setvariable variable=computedRequestedFor]$(resources.pipeline.build.requestedFor)"
+    condition: ne(variables['resources.pipeline.build.requestedFor'], '')
+    displayName: Override computedRequestedFor with resources.pipeline.build.requestedFor
+
+  - script: |
+      git config user.email "$(Build.RequestedForEmail)"
+      git config user.name "$(computedRequestedFor)"
+
+      git tag --annotate "${{ parameters.gitTag }}" --message "${{ parameters.gitMessage }}" --force
+      git push --force origin "${{ parameters.gitTag }}"
+    displayName: Git tag
+    condition: ${{ parameters.shouldRun }}
+
+  - task: PowerShell@2
+    displayName: Retain pipeline run
+    inputs:
+      filePath: 'build/scripts/retain-build.ps1'
+    env:
+      SYSTEM_COLLECTION_URI: $(System.CollectionUri)
+      SYSTEM_ACCESS_TOKEN: $(System.AccessToken)
+      SYSTEM_TEAM_PROJECT: $(System.TeamProject)
+      SYSTEM_BUILD_ID: $(Build.BuildId)
+      SYSTEM_DEFINITION_ID: $(System.DefinitionId)
+      SYSTEM_REQUESTED_FOR: $(computedRequestedFor)
+      DAYS_VALID: 360
+
+  - task: PowerShell@2
+    displayName: Retain triggered by pipeline run
+    condition: ne(variables['resources.pipeline.build.runID'], '')
+    inputs:
+      filePath: 'build/scripts/retain-build.ps1'
+    env:
+      SYSTEM_COLLECTION_URI: $(System.CollectionUri)
+      SYSTEM_ACCESS_TOKEN: $(System.AccessToken)
+      SYSTEM_TEAM_PROJECT: $(System.TeamProject)
+      SYSTEM_BUILD_ID: $(resources.pipeline.build.runID)
+      SYSTEM_DEFINITION_ID: $(resources.pipeline.build.pipelineID)
+      SYSTEM_REQUESTED_FOR: $(resources.pipeline.build.requestedFor)
+      DAYS_VALID: 360

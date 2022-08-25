@@ -54,6 +54,8 @@ steps:
         -var="project_name=$(System.TeamProject)" \        
         -var="resource_location=northeurope" \
         -var="subscription_id=$(subscription_id)" \
-        -var="tenant_id=$(tenant_id)"
+        -var="tenant_id=$(tenant_id)" \
+        -var-file=environment/default.tfvars \
+        -var-file=environment/$(env)/variables.tfvars
     workingDirectory: "repo_template/build/terraform"
     displayName: "terraform plan"

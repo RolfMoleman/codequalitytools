@@ -151,11 +151,13 @@ To get started do the following:
 3. Add your terraform files to the `.\repo_template\build\terraform` folder
 4. In the `variables.yaml` replace `c11ca9cd-0fac-404b-96ff-0e4134b40645` with the id of your repo which you can get here `https://dev.azure.com/bcagroup/project_name/_apis/git/repositories/repo_name?api-version=6.0`
 5. Amend the terraform variables used in `.\repo_template\build\pipelines\iac_templates\terraform_apply.yml` and `.\repo_template\build\pipelines\iac_templates\terraform_plan.yml`
-6. setup `.\repo_template\build\pipelines\Infrastructure.yml` as a pipeline in azure devops _Note: please give it a meaningful name_
-7. setup `repo_template\build\pipelines\code_quality.yml` as a pipeline in azure devops _Note: please give it a meaningful name_
-8. Replace the `.\repo_template\repo_template-images\screenshot.png` with a screenshot of your product
-9. Replace the `.\repo_template\repo_template-images\pipeline-screenshot.png` with a screenshot of your `repo_template\build\pipelines\code_quality.yml` pipeline once you have configured it
-10. Create an awesome project!
+6. setup `repo_template\build\pipelines\infrastructure.yml` as a pipeline in azure devops _Note: please give it a meaningful name_
+7. setup `repo_template\build\pipelines\infrastructure_pull_request.yml` as a pipeline in azure devops _Note: please give it a meaningful name_
+8. setup `repo_template\build\pipelines\infrastructure_quality.yml` as a pipeline in azure devops _Note: please give it a meaningful name_
+9. setup `repo_template\build\pipelines\code_quality.yml` as a pipeline in azure devops _Note: please give it a meaningful name_
+10. Replace the `.\repo_template\repo_template-images\screenshot.png` with a screenshot of your product
+11. Replace the `.\repo_template\repo_template-images\pipeline-screenshot.png` with a screenshot of your `repo_template\build\pipelines\code_quality.yml` pipeline once you have configured it
+12. Create an awesome project!
 
 ### Prerequisites ###
 
@@ -312,7 +314,7 @@ Thanks again!
 <!-- LICENSE -->
 ## License ##
 
-We don't currently distribute our products. however, there is an included license placeholder in the Repo should this change. See [LICENSE.md] for more information.
+We don't currently distribute our products. however, there is an included license placeholder in the Repo should this change. See [License] for more information.
 
 ---
 <!-- Readme Navigation -->
@@ -390,54 +392,54 @@ Use this space to list resources you find helpful and would like to give credit 
 [stars-url]: https://github.com/othneildrew/Best-README-Template/stargazers
 
 <!-- IMAGES AND ICONS -->
-[Home_Image]: ./repo_template-images/home.png
-[logo-image]: ./repo_template-images/logo.png
-[pipeline-screenshot]: ./repo_template-images/pipeline-screenshot.png
-[product-screenshot]: ./repo_template-images/screenshot.png
-[teams-icon]: ./repo_template-images/teams.png
+[Home_Image]: /repo_template-images/home.png
+[logo-image]: /repo_template-images/logo.png
+[pipeline-screenshot]: /repo_template-images/pipeline-screenshot.png
+[product-screenshot]: /repo_template-images/screenshot.png
+[teams-icon]: /repo_template-images/teams.png
 
 <!-- MARKDOWN DOCUMENT LINKS -->
-[Blank Readme]: ./BLANK_README.md
-[Code Quality]: ./docs/code_quality.md
-[Bridgecrew_Checkov]: ./docs/code_quality/bridgecrew_checkov.md
-[Checkmarx_KICS]: ./docs/code_quality/checkmarx_kics.md
-[GitHub_Super_Linter]: ./docs/code_quality/github_super_linter.md
-[Infracost]: ./docs/code_quality/Infracost.md
-[License]: ./license.md
-[Megalinter]: ./docs/code_quality/megalinter.md
-[Mend_Bolt]: ./docs/code_quality/mend_bolt.md
-[OWASP]: ./docs/code_quality/owasp.md
-[Readme]: ./README.md
-[Sonar_Cloud]: ./docs/code_quality/sonar_cloud.md
-[Template_updater]: ./docs/code_quality/template_updater.md
-[terraform_Compliance]: ./docs/code_quality/terraform_compliance.md
-[Terrascan]: ./docs/code_quality/terrascan.md
-[TFLint]: ./docs/code_quality/tflint.md
-[TFSec]: ./docs/code_quality/tfsec.md
-[Usage_Guide.md]: ./docs/usage_guide.md
+[Blank Readme]: /BLANK_README.md
+[Code Quality]: /docs/code_quality.md
+[Bridgecrew_Checkov]: /docs/code_quality/bridgecrew_checkov.md
+[Checkmarx_KICS]: /docs/code_quality/checkmarx_kics.md
+[GitHub_Super_Linter]: /docs/code_quality/github_super_linter.md
+[Infracost]: /docs/code_quality/Infracost.md
+[License]: /license.md
+[Megalinter]: /docs/code_quality/megalinter.md
+[Mend_Bolt]: /docs/code_quality/mend_bolt.md
+[OWASP]: /docs/code_quality/owasp.md
+[Readme]: /README.md
+[Sonar_Cloud]: /docs/code_quality/sonar_cloud.md
+[Template_updater]: /docs/code_quality/template_updater.md
+[terraform_Compliance]: /docs/code_quality/terraform_compliance.md
+[Terrascan]: /docs/code_quality/terrascan.md
+[TFLint]: /docs/code_quality/tflint.md
+[TFSec]: /docs/code_quality/tfsec.md
+[Usage_Guide.md]: /docs/usage_guide.md
 
 <!-- CODE QUALITY TEMPLATE LINKS -->
-[Checkmarx_KICS.yml]: ./build/pipelines/code_quality_templates/checkmarx_kics.yml
-[Checkov.yml]: ./build/pipelines/code_quality_templates/checkov.yml
-[Checkov_baseline_creator.yml]: ./build/pipelines/code_quality_templates/checkov_baseline_creator.yml
-[GitHub_Super_Linter.yml]: ./build/pipelines/code_quality_templates/github_super_linter.yml
-[Infracost.yml]: ./build/pipelines/code_quality_templates/Infracost.yml
-[Mega_Linter.yml]: ./build/pipelines/code_quality_templates/mega_linter.yml
-[OWASP.yml]: ./build/pipelines/code_quality_templates/owasp.yml
-[TFComplianceCheck.yml]: ./build/pipelines/code_quality_templates/tfcompliancecheck.yml
-[template_updater.yml]: ./build/pipelines/code_quality_templates/template_updater.yml
-[Terrascan.yml]: ./build/pipelines/code_quality_templates/terrascan.yml
-[TFLint.yml]: ./build/pipelines/code_quality_templates/tflint.yml
-[TFSec.yml]: ./build/pipelines/code_quality_templates/tfsec.yml
+[Checkmarx_KICS.yml]: /build/pipelines/code_quality_templates/checkmarx_kics.yml
+[Checkov.yml]: /build/pipelines/code_quality_templates/checkov.yml
+[Checkov_baseline_creator.yml]: /build/pipelines/code_quality_templates/checkov_baseline_creator.yml
+[GitHub_Super_Linter.yml]: /build/pipelines/code_quality_templates/github_super_linter.yml
+[Infracost.yml]: /build/pipelines/code_quality_templates/Infracost.yml
+[Mega_Linter.yml]: /build/pipelines/code_quality_templates/mega_linter.yml
+[OWASP.yml]: /build/pipelines/code_quality_templates/owasp.yml
+[TFComplianceCheck.yml]: /build/pipelines/code_quality_templates/tfcompliancecheck.yml
+[template_updater.yml]: /build/pipelines/code_quality_templates/template_updater.yml
+[Terrascan.yml]: /build/pipelines/code_quality_templates/terrascan.yml
+[TFLint.yml]: /build/pipelines/code_quality_templates/tflint.yml
+[TFSec.yml]: /build/pipelines/code_quality_templates/tfsec.yml
 
 <!-- IAC TEMPLATE LINKS-->
-[terraform_apply.yml]: ./build/pipelines/iac_templates/terraform_apply.yml
-[terraform_plan.yml]: ./build/pipelines/iac_templates/terraform_plan.yml
-[variables.yml]: ./build/pipelines/iac_templates/variables.yml
+[terraform_apply.yml]: /build/pipelines/iac_templates/terraform_apply.yml
+[terraform_plan.yml]: /build/pipelines/iac_templates/terraform_plan.yml
+[variables.yml]: /build/pipelines/iac_templates/variables.yml
 
 <!-- PIPELINE LINKS -->
-[infrastructure.yml]: ./build/pipelines/infrastructure.yml
-[code_quality.yml]: ./build/pipelines/code_quality.yml
+[infrastructure.yml]: /build/pipelines/infrastructure.yml
+[code_quality.yml]: /build/pipelines/code_quality.yml
 
 <!-- GitHub stuff-->
 <!--

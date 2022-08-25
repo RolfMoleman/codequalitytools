@@ -19,6 +19,8 @@ trigger:
 stages:
   #Development
   - stage: dev_plan
+    condition: succeededOrFailed()
+    dependsOn:
     displayName: "terraform_plan_dev"
     jobs:
       - deployment: dev_env_provisioning
@@ -43,8 +45,9 @@ stages:
                     artifact: plan_$(environment_tag)
 
   - stage: dev_apply
-    displayName: "terraform_apply_dev"
+    condition: succeededOrFailed()
     dependsOn: dev_plan
+    displayName: "terraform_apply_dev"
     jobs:
       - deployment: dev_env_provisioning
         environment: "dev-apply"
@@ -68,6 +71,8 @@ stages:
                 - template: iac_templates/terraform_apply.yml
   #UAT
   - stage: uat_plan
+    condition: succeededOrFailed()
+    dependsOn: dev_apply
     displayName: "terraform_plan_uat"
     jobs:
       - deployment: uat_env_provisioning
@@ -92,8 +97,11 @@ stages:
                     artifact: plan_$(environment_tag)
 
   - stage: uat_apply
+    condition: succeeded('uat_plan')
+    dependsOn: 
+      - dev_apply
+      - uat_plan
     displayName: "terraform_apply_uat"
-    dependsOn: uat_plan
     jobs:
       - deployment: uat_env_provisioning
         environment: "uat-apply"
@@ -117,6 +125,10 @@ stages:
                 - template: iac_templates/terraform_apply.yml
   #Production
   - stage: prod_plan
+    condition: succeededOrFailed()
+    dependsOn: 
+      - dev_apply
+      - uat_apply
     displayName: "terraform_plan_prod"
     jobs:
       - deployment: prod_env_provisioning
@@ -141,8 +153,12 @@ stages:
                     artifact: plan_$(environment_tag)
 
   - stage: prod_apply
+    condition: succeeded('prod_plan')
+    dependsOn: 
+      - dev_apply
+      - uat_apply
+      - prod_plan
     displayName: "terraform_apply_prod"
-    dependsOn: prod_plan
     jobs:
       - deployment: prod_env_provisioning
         environment: "prod-apply"
@@ -164,3 +180,29 @@ stages:
                     artifact: plan_$(environment_tag)
                     path: $(System.DefaultWorkingDirectory)/repo_template/build/terraform
                 - template: iac_templates/terraform_apply.yml
+
+  - stage: create_tag
+    condition: succeeded('prod_apply')
+    dependsOn: 
+      - dev_apply
+      - uat_apply
+      - prod_apply
+    displayName: "create_git_tag"
+    jobs:
+      - job: tagsources
+        timeoutInMinutes: 0
+        variables:
+          - template: iac_templates/variables.yml
+            parameters:
+              environmentTag: "prod"
+        displayName: "prod"
+        pool:
+          name: "bca-windows-pool"
+        steps:
+          - checkout: self
+            persistCredentials: true
+
+          - template: release_templates/create_git_tag.yml
+            parameters:
+              gitTag: '$(Build.BuildNumber)_Infrastructure'
+              gitMessage: 'Infrastructure deploy'

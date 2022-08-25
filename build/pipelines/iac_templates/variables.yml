@@ -9,6 +9,18 @@ parameters:
       - "dev"
       - "uat"
       - "prod"
+  
+  - name: 'gitTag'
+    type: string
+    default: variables['Build.SourceVersion']
+
+  - name: 'gitMessage'
+    type: string
+    default: $[format('{0} {1}', 'new git tag of', variables['Build.SourceVersion'])]
+
+  - name: 'tagRelease'
+    type: string
+    default: true
 
 variables:
 ## compile time variables below  
@@ -29,6 +41,11 @@ variables:
     value: 'https://bcagroup@dev.azure.com/bcagroup/BCA.DevOps/_git/repo_template'
   - name: prisma_api_url
     value: 'https://api2.eu.prismacloud.io/'
+  # Git
+  #- name: gitTag
+  #  value: 'https://bcagroup@dev.azure.com/bcagroup/BCA.DevOps/_git/repo_template'
+  #- name: gitMessage
+  #  value: 'https://api2.eu.prismacloud.io/'
   # Infracost
   #- name: Infracost_api
   #  value: 'https://api2.eu.prismacloud.io/'
