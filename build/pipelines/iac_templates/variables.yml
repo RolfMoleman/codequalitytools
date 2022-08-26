@@ -9,63 +9,63 @@ parameters:
       - "dev"
       - "uat"
       - "prod"
-  
-  - name: 'gitTag'
+
+  - name: "gitTag"
     type: string
     default: variables['Build.SourceVersion']
 
-  - name: 'gitMessage'
+  - name: "gitMessage"
     type: string
     default: $[format('{0} {1}', 'new git tag of', variables['Build.SourceVersion'])]
 
-  - name: 'tagRelease'
+  - name: "tagRelease"
     type: string
     default: true
 
 variables:
-## compile time variables below  
+  ## compile time variables below
   - name: environment_tag
     value: ${{ parameters.environmentTag }}
   - group: ${{ replace('tfvars-env','env', parameters.environmentTag) }}
   - name: state-key
     value: ${{ replace('terraform.env.tfstate','env', parameters.environmentTag) }}
-## runtime variables below
+  ## runtime variables below
   # Branch and Repo info
   - name: project_repo
     value: $[format('{0}/{1}', variables['System.TeamProject'], 'repo_template')]
   - name: repo_branch
     value: $[replace(variables['Build.SourceBranch'] , 'refs/heads/', '')]
   - name: repo_main_branch
-    value: 'main'
+    value: "main"
   - name: repo_url
-    value: 'https://bcagroup@dev.azure.com/bcagroup/BCA.DevOps/_git/repo_template'
+    value: "https://dev.azure.com/bcagroup/BCA.Operations.Utilities/_git/repo_template"
   - name: prisma_api_url
-    value: 'https://api2.eu.prismacloud.io/'
+    value: "https://api2.eu.prismacloud.io/"
   # Git
   #- name: gitTag
-  #  value: 'https://bcagroup@dev.azure.com/bcagroup/BCA.DevOps/_git/repo_template'
+  #  value: 'https://dev.azure.com/bcagroup/BCA.Operations.Utilities/_git/repo_template'
   #- name: gitMessage
   #  value: 'https://api2.eu.prismacloud.io/'
   # Infracost
   #- name: Infracost_api
   #  value: 'https://api2.eu.prismacloud.io/'
   - name: Infracost_key
-    value: 'plBhlBPILqXDFUz4o4gwUd1OtJlpuCNi'      
-  # Sonar Cloud  
+    value: "plBhlBPILqXDFUz4o4gwUd1OtJlpuCNi"
+  # Sonar Cloud
   - name: sonarcloud_cliprojectkey
-    value: 'c11ca9cd-0fac-404b-96ff-0e4134b40645'
+    value: "c11ca9cd-0fac-404b-96ff-0e4134b40645"
   - name: sonarcloud_cliprojectname
-    value: $[format('{0}\{1}', variables['System.TeamProject'], 'repo_template')]  
+    value: $[format('{0}\{1}', variables['System.TeamProject'], 'repo_template')]
   - name: sonarcloud_organization
-    value: 'jz5egu5xyrzlb4u6gfphc76z45qw3pjcdjmccgoxatunpqrvjvka'
-## terraform runtime variables    
+    value: "jz5egu5xyrzlb4u6gfphc76z45qw3pjcdjmccgoxatunpqrvjvka"
+  ## terraform runtime variables
   - name: azuread_provider_version
-    value: '>=2.25.0'
+    value: ">=2.25.0"
   - name: azurerm_provider_version
-    value: '>=3.12.0'    
+    value: ">=3.12.0"
   - name: terraform_installer_version
-    value: '1.2.4'
+    value: "1.2.4"
   - name: terraform_required_version
-    value: $[format('{0}{1}', '>=', variables['terraform_installer_version'])]  
+    value: $[format('{0}{1}', '>=', variables['terraform_installer_version'])]
   - name: time_provider_version
-    value: '>=0.7.2'    
+    value: ">=0.7.2"

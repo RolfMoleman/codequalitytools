@@ -24,7 +24,7 @@ There are a number of code quality tools included in this repository as template
 <!-- Pipelines -->
 ## Pipelines ##
 
-[![Pipeline screenshot][pipeline-screenshot]](https://dev.azure.com/bcagroup/BCA.DevOps/_git/repo_template?path=/repo_template-images/pipeline-screenshot.png&version=GBmaster&_a=preview)
+[![Pipeline screenshot][pipeline-screenshot]](https://dev.azure.com/bcagroup/BCA.Operations.Utilities/_git/repo_template?path=/repo_template-images/pipeline-screenshot.png&version=GBmaster&_a=preview)
 
 The above image shows an example pipeline setup to run against the BCA Azure Front Door.
 The pipeline `repo_template\build\pipelines\code_quality.yml` uses a number of stages to run various code quality, security and linting tools for multiple different languages but with a primary focus on Infrastructure as Code (IAC) in particular terraform but also ARM.
@@ -239,7 +239,7 @@ Contributions are always **greatly appreciated**.
 If there is a free tool you think should be added, please clone the Repo and create a pull request. For any proposed paid tools please use the contacts section further down before adding to this Repo.
 Thanks again!
 
-1. Clone the Repo (`git clone https://bcagroup@dev.azure.com/bcagroup/BCA.DevOps/_git/repo_template`)
+1. Clone the Repo (`git clone https://dev.azure.com/bcagroup/BCA.Operations.Utilities/_git/repo_template`)
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
 3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
@@ -262,7 +262,7 @@ Jason Donnelly - [![Chat with me on Teams][teams-icon]](https://teams.microsoft.
 
 Matt Silvester - [![Chat with me on Teams][teams-icon]](https://teams.microsoft.com/l/chat/0/0?users=matthew.silvester@bca.com) - Platform and Automation Engineer
 
-Project Link: [https://dev.azure.com/bcagroup/BCA.DevOps/](https://dev.azure.com/bcagroup/BCA.DevOps/)
+Project Link: [https://dev.azure.com/bcagroup/BCA.Operations.Utilities/](https://dev.azure.com/bcagroup/BCA.Operations.Utilities/)
 
 ---
 <!-- Readme Navigation -->

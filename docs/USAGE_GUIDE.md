@@ -2,7 +2,7 @@
 
 [![Home][Home_Image]][Readme]
 
-[![name][logo-image]](https://dev.azure.com/bcagroup/BCA.DevOps/_git/repo_template)
+[![name][logo-image]](https://dev.azure.com/bcagroup/BCA.Operations.Utilities/_git/repo_template)
 
 <!-- TABLE OF CONTENTS -->
 ## Table of Contents ##
@@ -27,7 +27,7 @@ To get started do the following:
    1. add the remote:
 
    ```console
-   git remote add -f repo_template https://bcagroup@dev.azure.com/bcagroup/BCA.DevOps/_git/repo_template
+   git remote add -f repo_template https://dev.azure.com/bcagroup/BCA.Operations.Utilities/_git/repo_template
    ```
 
    2. Add the subtree:
@@ -47,7 +47,7 @@ To get started do the following:
    2. rename the copied BLANK_README.md to README.md
    3. In the new `README.md` do the following:
       1. Replace `repo_name` with your repository name e.g. repo_template
-      2. Replace `project_name` with your Azure DevOps project name e.g. `BCA.Devops`
+      2. Replace `project_name` with your Azure DevOps project name e.g. `BCA.Operations.Utilities`
       3. Replace `email_address` with your email address e.g. `carl.dawson@bca.com`
       4. Replace or remove `linkedin_username` as appropriate
       5. Replace `project_title` with what you want to call the project e.g. `BCA Repository Template`
@@ -200,7 +200,7 @@ This repo is an in-house opensource project, any staff member can contribute and
 If you have a suggestion that would make this better, please clone the Repo, create a feature branch and create a pull request.
 Thanks again!
 
-1. Clone the Repo (`git clone https://bcagroup@dev.azure.com/bcagroup/BCA.DevOps/_git/repo_template`)
+1. Clone the Repo (`git clone https://dev.azure.com/bcagroup/BCA.Operations.Utilities/_git/repo_template`)
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
 3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
@@ -246,7 +246,7 @@ Jason Donnelly - [![Chat with me on Teams][teams-icon]](https://teams.microsoft.
 
 Matt Silvester - [![Chat with me on Teams][teams-icon]](https://teams.microsoft.com/l/chat/0/0?users=matthew.silvester@bca.com) - Platform and Automation Engineer
 
-Project Link: [https://dev.azure.com/bcagroup/BCA.DevOps/](https://dev.azure.com/bcagroup/BCA.DevOps/)
+Project Link: [https://dev.azure.com/bcagroup/BCA.Operations.Utilities/](https://dev.azure.com/bcagroup/BCA.Operations.Utilities/)
 
 ---
 <!-- Readme Navigation -->

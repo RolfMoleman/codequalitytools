@@ -6,7 +6,7 @@
 
 This template has been written by Carl Dawson - Platform and Automation Engineer - [![Chat with me on Teams][teams-icon]](https://teams.microsoft.com/l/chat/0/0?users=carl.dawson@bca.com) - carl.dawson@bca.com
 
-the idea behind this is to enable the pipeline to programmatically pull in any newly created templates from the Repo_template repository in the BCA.DevOps Azure Devops project. This is to ensure that all product teams always have the latest versions of the templates available to them but without overriding any custom configurations that they have put in place.
+the idea behind this is to enable the pipeline to programmatically pull in any newly created templates from the Repo_template repository in the BCA.Operations.Utilities Azure Devops project. This is to ensure that all product teams always have the latest versions of the templates available to them but without overriding any custom configurations that they have put in place.
 
 ---
 **NOTE:** This template is a work in progress and you use it at your own risk. I accept no responsibility for incorrectly managed merge conflicts which may result in misconfigured pipelines, incorrect wikis or readmes.
@@ -31,12 +31,12 @@ steps:
       git config --global user.name "build service"
 
       echo "add repo_template remote and fetch it"
-      git remote add -f repo_template https://bcagroup@dev.azure.com/bcagroup/BCA.DevOps/_git/repo_template
+      git remote add -f repo_template https://dev.azure.com/bcagroup/BCA.Operations.Utilities/_git/repo_template
 
       echo "create a pipeline update branch"
       git checkout -b 'repo_template-master_updates'
 
-      echo "merge in BCA.devops/repo_template main branch but keep our changes"
+      echo "merge in BCA.Operations.Utilities/repo_template main branch but keep our changes"
       git merge --allow-unrelated-histories -s ours repo_template/main 
 
       echo "get updates just for code_quality_templates directory"
@@ -84,7 +84,7 @@ steps:
 
 What this template does is:
 
-* add a new git remote called repo_template pointed to the repo_template repository under the Azure Devops project called BCA.Devops and fetches from it
+* add a new git remote called repo_template pointed to the repo_template repository under the Azure Devops project called BCA.Operations.Utilities and fetches from it
 * create a new branch called `repo_template-master_updates`
 * perform a git merge allowing unrelated histories from the master branch of the repo_template repository using the merge strategy `ours` to keep the changes in this Repo
 * perform a git read-tree to see what is different between the contents of `build/pipelines/code_quality_templates/` in this Repo and in the repo_template Repo
