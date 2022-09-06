@@ -39,7 +39,7 @@ stages:
         variables:
           - name: system.debug
             value: true
-          - template: iac_templates/variables.yml
+          - template: repo_template/build/iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
         displayName: "dev"
@@ -48,7 +48,7 @@ stages:
         steps:
           - checkout: self
             persistCredentials: true
-          - template: code_quality_templates/checkov.yml
+          - template: repo_template/build/code_quality_templates/checkov.yml
 
   ## Infracost shows cloud cost estimates for Terraform.
   - stage: dev_infracost
@@ -61,7 +61,7 @@ stages:
         variables:
           - name: system.debug
             value: true
-          - template: iac_templates/variables.yml
+          - template: repo_template/build/iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
         displayName: "dev"
@@ -70,7 +70,7 @@ stages:
         steps:
           - checkout: self
             persistCredentials: true
-          - template: code_quality_templates/infracost.yml
+          - template: repo_template/build/code_quality_templates/infracost.yml
 
   ## Lightweight scanning tool by Checkmarx that is very easy to setup and run
   - stage: dev_kics
@@ -83,7 +83,7 @@ stages:
         variables:
           - name: system.debug
             value: true
-          - template: iac_templates/variables.yml
+          - template: repo_template/build/iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
         displayName: "dev"
@@ -92,7 +92,7 @@ stages:
         steps:
           - checkout: self
             persistCredentials: true
-          - template: code_quality_templates/checkmarx_kics.yml
+          - template: repo_template/build/code_quality_templates/checkmarx_kics.yml
 
   ## Software composition Analysis tool
   - stage: dev_sonar
@@ -105,7 +105,7 @@ stages:
         variables:
           - name: system.debug
             value: true
-          - template: iac_templates/variables.yml
+          - template: repo_template/build/iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
         displayName: "dev"
@@ -114,7 +114,7 @@ stages:
         steps:
           - checkout: self
             persistCredentials: true
-          - template: code_quality_templates/sonar_cloud.yml
+          - template: repo_template/build/code_quality_templates/sonar_cloud.yml
 
   ## Lightweight scanning tool that will scan multiple languages
   - stage: dev_terrascan
@@ -127,7 +127,7 @@ stages:
         variables:
           - name: system.debug
             value: true
-          - template: iac_templates/variables.yml
+          - template: repo_template/build/iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
         displayName: "dev"
@@ -136,7 +136,7 @@ stages:
         steps:
           - checkout: self
             persistCredentials: true
-          - template: code_quality_templates/terrascan.yml
+          - template: repo_template/build/code_quality_templates/terrascan.yml
 
   ## Lightweight terraform linter
   - stage: dev_tflint
@@ -149,7 +149,7 @@ stages:
         variables:
           - name: system.debug
             value: true
-          - template: iac_templates/variables.yml
+          - template: repo_template/build/iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
         displayName: "dev"
@@ -158,7 +158,7 @@ stages:
         steps:
           - checkout: self
             persistCredentials: true
-          - template: code_quality_templates/tflint.yml
+          - template: repo_template/build/code_quality_templates/tflint.yml
 
   ## Lightweight scanning tool that is very easy to setup and run both via pipeline and locally
   - stage: dev_tfsec
@@ -171,7 +171,7 @@ stages:
         variables:
           - name: system.debug
             value: true
-          - template: iac_templates/variables.yml
+          - template: repo_template/build/iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
         displayName: "dev"
@@ -180,7 +180,7 @@ stages:
         steps:
           - checkout: self
             persistCredentials: true
-          - template: code_quality_templates/tfsec.yml
+          - template: repo_template/build/code_quality_templates/tfsec.yml
 
   ## Bit slow but lints everything and has an auto-fix option
   - stage: dev_megalinter
@@ -193,7 +193,7 @@ stages:
         variables:
           - name: system.debug
             value: true
-          - template: iac_templates/variables.yml
+          - template: repo_template/build/iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
         displayName: "dev"
@@ -202,7 +202,7 @@ stages:
         steps:
           - checkout: self
             persistCredentials: true
-          - template: code_quality_templates/mega_linter.yml
+          - template: repo_template/build/code_quality_templates/mega_linter.yml
 
   ## runs a terraform plan  and outputs the plan file. this is needed for the compliance check
   - stage: dev_plan
@@ -220,7 +220,7 @@ stages:
         variables:
           - name: system.debug
             value: true
-          - template: iac_templates/variables.yml
+          - template: repo_template/build/iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
         displayName: "dev"
@@ -237,7 +237,7 @@ stages:
             inputs:
               path: $(System.DefaultWorkingDirectory)/repo_template/build/terraform/plan-$(environment_tag)
               artifact: plan-$(environment_tag)  
-          - template: iac_templates/terraform_plan.yml
+          - template: repo_template/build/iac_templates/terraform_plan.yml
 
   ## needs a plan file to run
   - stage: dev_compliance_check
@@ -249,7 +249,7 @@ stages:
       variables:
         - name: system.debug
           value: true
-        - template: iac_templates/variables.yml
+        - template: repo_template/build/iac_templates/variables.yml
           parameters:
             environmentTag: 'dev'
       displayName: 'dev'
@@ -266,7 +266,7 @@ stages:
         inputs:
           path: $(System.DefaultWorkingDirectory)/repo_template/build/terraform
           artifact: plan-$(environment_tag)
-      - template: code_quality_templates/tfcompliancecheck.yml
+      - template: repo_template/build/code_quality_templates/tfcompliancecheck.yml
 
 #  # Creates backlog items for failed tests - do not enable without discussing with the product team
 #  - stage: dev_board_updater
@@ -278,7 +278,7 @@ stages:
 #      variables:
 #        - name: system.debug
 #          value: true
-#        - template: iac_templates/variables.yml
+#        - template: repo_template/build/iac_templates/variables.yml
 #          parameters:
 #            environmentTag: 'dev'
 #      displayName: 'dev'
