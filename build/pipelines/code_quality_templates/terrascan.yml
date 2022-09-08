@@ -9,7 +9,7 @@ steps:
         
       if [[ "$str" == "human" ]]; then
         docker run \
-          --volume "$(pwd)"/:/Repo \
+          --volume $(pwd):/Repo \
           --volume $(pwd)/terrascanreports:/reports \
           --workdir /Repo \
           tenable/terrascan:latest \
@@ -20,7 +20,7 @@ steps:
           --output $str 
       elif [[ "$str" == "json" ]]; then
         docker run \
-          --volume "$(pwd)"/:/Repo \
+          --volume $(pwd):/Repo \
           --volume $(pwd)/terrascanreports:/reports \
           --workdir /Repo \
           tenable/terrascan:latest \
@@ -31,7 +31,7 @@ steps:
           --output $str 
       elif [[ "$str" == "junit-xml" ]]; then
         docker run \
-          --volume "$(pwd)"/:/Repo \
+          --volume $(pwd):/Repo \
           --volume $(pwd)/terrascanreports:/reports \
           --workdir /Repo \
           tenable/terrascan:latest \
@@ -42,7 +42,7 @@ steps:
           --output $str 
       elif [[ "$str" == "sarif" ]]; then
         docker run \
-          --volume "$(pwd)"/:/Repo \
+          --volume $(pwd):/Repo \
           --volume $(pwd)/terrascanreports:/reports \
           --workdir /Repo \
           tenable/terrascan:latest \
@@ -53,7 +53,7 @@ steps:
           --output $str 
       elif [[ "$str" == "xml" ]]; then
         docker run \
-          --volume "$(pwd)"/:/Repo \
+          --volume $(pwd):/Repo \
           --volume $(pwd)/terrascanreports:/reports \
           --workdir /Repo \
           tenable/terrascan:latest \
@@ -64,7 +64,7 @@ steps:
           --output $str 
       elif [[ "$str" == "yaml" ]]; then
         docker run \
-          --volume "$(pwd)"/:/Repo \
+          --volume $(pwd):/Repo \
           --volume $(pwd)/terrascanreports:/reports \
           --workdir /Repo \
           tenable/terrascan:latest \

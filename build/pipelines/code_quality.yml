@@ -40,7 +40,7 @@ stages:
         variables:
           - name: system.debug
             value: true
-          - template: iac_templates/variables.yml
+          - template: repo_template/build/iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
         displayName: "dev"
@@ -52,7 +52,7 @@ stages:
               steps:
                 - checkout: self
                   persistCredentials: true
-                - template: code_quality_templates/mend_bolt.yml
+                - template: repo_template/build/code_quality_templates/mend_bolt.yml
 
   ## Open source software composition Analysis tool
   - stage: dev_owasp
@@ -66,7 +66,7 @@ stages:
         variables:
           - name: system.debug
             value: true
-          - template: iac_templates/variables.yml
+          - template: repo_template/build/iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
         displayName: "dev"
@@ -78,7 +78,7 @@ stages:
               steps:
                 - checkout: self
                   persistCredentials: true
-                - template: code_quality_templates/owasp.yml
+                - template: repo_template/build/code_quality_templates/owasp.yml
 
   ## Software composition Analysis tool
   - stage: dev_sonar
@@ -92,7 +92,7 @@ stages:
         variables:
           - name: system.debug
             value: true
-          - template: iac_templates/variables.yml
+          - template: repo_template/build/iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
         displayName: "dev"
@@ -104,7 +104,7 @@ stages:
               steps:
                 - checkout: self
                   persistCredentials: true
-                - template: code_quality_templates/sonar_cloud.yml
+                - template: repo_template/build/code_quality_templates/sonar_cloud.yml
 
   ## Bit slow but lints everything and has an auto-fix option
   - stage: dev_megalinter
@@ -118,7 +118,7 @@ stages:
         variables:
           - name: system.debug
             value: true
-          - template: iac_templates/variables.yml
+          - template: repo_template/build/iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
         displayName: "dev"
@@ -130,7 +130,7 @@ stages:
               steps:
                 - checkout: self
                   persistCredentials: true
-                - template: code_quality_templates/mega_linter.yml
+                - template: repo_template/build/code_quality_templates/mega_linter.yml
 
 #  # Creates backlog items for failed tests - do not enable without discussing with the product team
 #  - stage: dev_board_updater
@@ -143,7 +143,7 @@ stages:
 #      variables:
 #        - name: system.debug
 #          value: true
-#        - template: iac_templates/variables.yml
+#        - template: repo_template/build/iac_templates/variables.yml
 #          parameters:
 #            environmentTag: 'dev'
 #      displayName: 'dev'
