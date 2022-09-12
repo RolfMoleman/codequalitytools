@@ -10,8 +10,8 @@ trigger:
   paths:
     include:
       - "build/pipelines/*"
-      - "build/pipelines/repo_template/build/code_quality_templates/*"
-      - "build/pipelines/repo_template/build/iac_templates/*"
+      - "build/pipelines/repo_template/build/pipelines/code_quality_templates/*"
+      - "build/pipelines/repo_template/build/pipelines/iac_templates/*"
       - 'build/terraform/*'
       - "terraform/*"
     exclude:
@@ -27,7 +27,7 @@ stages:
         environment: "dev-plan"
         timeoutInMinutes: 0
         variables:
-          - template: repo_template/build/iac_templates/variables.yml
+          - template: repo_template/build/pipelines/iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
         displayName: "dev"
@@ -38,7 +38,7 @@ stages:
             deploy:
               steps:
                 - checkout: self
-                - template: repo_template/build/iac_templates/terraform_plan.yml
+                - template: repo_template/build/pipelines/iac_templates/terraform_plan.yml
                 - task: PublishPipelineArtifact@1
                   inputs:
                     path: $(System.DefaultWorkingDirectory)/repo_template/build/terraform/plan_$(environment_tag)
@@ -53,7 +53,7 @@ stages:
         environment: "dev-apply"
         timeoutInMinutes: 0
         variables:
-          - template: repo_template/build/iac_templates/variables.yml
+          - template: repo_template/build/pipelines/iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
         displayName: "dev"
@@ -68,7 +68,7 @@ stages:
                   inputs:
                     artifact: plan_$(environment_tag)
                     path: $(System.DefaultWorkingDirectory)/repo_template/build/terraform
-                - template: repo_template/build/iac_templates/terraform_apply.yml
+                - template: repo_template/build/pipelines/iac_templates/terraform_apply.yml
   #UAT
   - stage: uat_plan
     condition: succeededOrFailed()
@@ -79,7 +79,7 @@ stages:
         environment: "uat-plan"
         timeoutInMinutes: 0
         variables:
-          - template: repo_template/build/iac_templates/variables.yml
+          - template: repo_template/build/pipelines/iac_templates/variables.yml
             parameters:
               environmentTag: "uat"
         displayName: "uat"
@@ -90,7 +90,7 @@ stages:
             deploy:
               steps:
                 - checkout: self
-                - template: repo_template/build/iac_templates/terraform_plan.yml
+                - template: repo_template/build/pipelines/iac_templates/terraform_plan.yml
                 - task: PublishPipelineArtifact@1
                   inputs:
                     path: $(System.DefaultWorkingDirectory)/repo_template/build/terraform/plan_$(environment_tag)
@@ -107,7 +107,7 @@ stages:
         environment: "uat-apply"
         timeoutInMinutes: 0
         variables:
-          - template: repo_template/build/iac_templates/variables.yml
+          - template: repo_template/build/pipelines/iac_templates/variables.yml
             parameters:
               environmentTag: "uat"
         displayName: "uat"
@@ -122,7 +122,7 @@ stages:
                   inputs:
                     artifact: plan_$(environment_tag)
                     path: $(System.DefaultWorkingDirectory)/repo_template/build/terraform
-                - template: repo_template/build/iac_templates/terraform_apply.yml
+                - template: repo_template/build/pipelines/iac_templates/terraform_apply.yml
   #Production
   - stage: prod_plan
     condition: succeededOrFailed()
@@ -135,7 +135,7 @@ stages:
         environment: "prod-plan"
         timeoutInMinutes: 0
         variables:
-          - template: repo_template/build/iac_templates/variables.yml
+          - template: repo_template/build/pipelines/iac_templates/variables.yml
             parameters:
               environmentTag: "prod"
         displayName: "prod"
@@ -146,7 +146,7 @@ stages:
             deploy:
               steps:
                 - checkout: self
-                - template: repo_template/build/iac_templates/terraform_plan.yml
+                - template: repo_template/build/pipelines/iac_templates/terraform_plan.yml
                 - task: PublishPipelineArtifact@1
                   inputs:
                     path: $(System.DefaultWorkingDirectory)/repo_template/build/terraform/plan_$(environment_tag)
@@ -164,7 +164,7 @@ stages:
         environment: "prod-apply"
         timeoutInMinutes: 0
         variables:
-          - template: repo_template/build/iac_templates/variables.yml
+          - template: repo_template/build/pipelines/iac_templates/variables.yml
             parameters:
               environmentTag: "prod"
         displayName: "prod"
@@ -179,7 +179,7 @@ stages:
                   inputs:
                     artifact: plan_$(environment_tag)
                     path: $(System.DefaultWorkingDirectory)/repo_template/build/terraform
-                - template: repo_template/build/iac_templates/terraform_apply.yml
+                - template: repo_template/build/pipelines/iac_templates/terraform_apply.yml
 
   - stage: create_tag
     condition: succeeded('prod_apply')
@@ -192,7 +192,7 @@ stages:
       - job: tagsources
         timeoutInMinutes: 0
         variables:
-          - template: repo_template/build/iac_templates/variables.yml
+          - template: repo_template/build/pipelines/iac_templates/variables.yml
             parameters:
               environmentTag: "prod"
         displayName: "prod"

@@ -14,7 +14,7 @@ steps:
       git merge --allow-unrelated-histories -s ours repo_template/main 
 
       echo "get updates just for code_quality_templates directory"
-      git read-tree --prefix=build/pipelines/repo_template/build/code_quality_templates/ -u repo_template/main:build/pipelines/code_quality_templates
+      git read-tree --prefix=build/pipelines/repo_template/build/pipelines/code_quality_templates/ -u repo_template/main:build/pipelines/code_quality_templates
 
       echo "Adding new files from repo_template in build/pipelines/code_quality_templates that do not exist here"
       git commit -m 'Adding new files from repo_template in build/pipelines/code_quality_templates directory'

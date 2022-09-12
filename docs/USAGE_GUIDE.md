@@ -303,23 +303,23 @@ Project Link: [https://dev.azure.com/bcagroup/BCA.Operations.Utilities/](https:/
 [Usage_Guide.md]: ./docs/usage_guide.md
 
 <!-- CODE QUALITY TEMPLATE LINKS -->
-[Checkmarx_KICS.yml]: /build/pipelines/repo_template/build/code_quality_templates/checkmarx_kics.yml
-[Checkov.yml]: /build/pipelines/repo_template/build/code_quality_templates/checkov.yml
-[Checkov_baseline_creator.yml]: /build/pipelines/repo_template/build/code_quality_templates/checkov_baseline_creator.yml
-[GitHub_Super_Linter.yml]: /build/pipelines/repo_template/build/code_quality_templates/github_super_linter.yml
-[Infracost.yml]: /build/pipelines/repo_template/build/code_quality_templates/Infracost.yml
-[Mega_Linter.yml]: /build/pipelines/repo_template/build/code_quality_templates/mega_linter.yml
-[OWASP.yml]: /build/pipelines/repo_template/build/code_quality_templates/owasp.yml
-[TFComplianceCheck.yml]: /build/pipelines/repo_template/build/code_quality_templates/tfcompliancecheck.yml
-[template_updater.yml]: /build/pipelines/repo_template/build/code_quality_templates/template_updater.yml
-[Terrascan.yml]: /build/pipelines/repo_template/build/code_quality_templates/terrascan.yml
-[TFLint.yml]: /build/pipelines/repo_template/build/code_quality_templates/tflint.yml
-[TFSec.yml]: /build/pipelines/repo_template/build/code_quality_templates/tfsec.yml
+[Checkmarx_KICS.yml]: /build/pipelines/repo_template/build/pipelines/code_quality_templates/checkmarx_kics.yml
+[Checkov.yml]: /build/pipelines/repo_template/build/pipelines/code_quality_templates/checkov.yml
+[Checkov_baseline_creator.yml]: /build/pipelines/repo_template/build/pipelines/code_quality_templates/checkov_baseline_creator.yml
+[GitHub_Super_Linter.yml]: /build/pipelines/repo_template/build/pipelines/code_quality_templates/github_super_linter.yml
+[Infracost.yml]: /build/pipelines/repo_template/build/pipelines/code_quality_templates/Infracost.yml
+[Mega_Linter.yml]: /build/pipelines/repo_template/build/pipelines/code_quality_templates/mega_linter.yml
+[OWASP.yml]: /build/pipelines/repo_template/build/pipelines/code_quality_templates/owasp.yml
+[TFComplianceCheck.yml]: /build/pipelines/repo_template/build/pipelines/code_quality_templates/tfcompliancecheck.yml
+[template_updater.yml]: /build/pipelines/repo_template/build/pipelines/code_quality_templates/template_updater.yml
+[Terrascan.yml]: /build/pipelines/repo_template/build/pipelines/code_quality_templates/terrascan.yml
+[TFLint.yml]: /build/pipelines/repo_template/build/pipelines/code_quality_templates/tflint.yml
+[TFSec.yml]: /build/pipelines/repo_template/build/pipelines/code_quality_templates/tfsec.yml
 
 <!-- IAC TEMPLATE LINKS-->
-[terraform_apply.yml]: /build/pipelines/repo_template/build/iac_templates/terraform_apply.yml
-[terraform_plan.yml]: /build/pipelines/repo_template/build/iac_templates/terraform_plan.yml
-[variables.yml]: /build/pipelines/repo_template/build/iac_templates/variables.yml
+[terraform_apply.yml]: /build/pipelines/repo_template/build/pipelines/iac_templates/terraform_apply.yml
+[terraform_plan.yml]: /build/pipelines/repo_template/build/pipelines/iac_templates/terraform_plan.yml
+[variables.yml]: /build/pipelines/repo_template/build/pipelines/iac_templates/variables.yml
 
 <!-- PIPELINE LINKS -->
 [infrastructure.yml]: /build/pipelines/infrastructure.yml
