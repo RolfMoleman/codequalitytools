@@ -9,11 +9,12 @@ trigger:
       - "*"
   paths:
     include:
-      - "build/pipelines/*"
-      - "build/pipelines/repo_template/build/pipelines/code_quality_templates/*"
-      - "build/pipelines/repo_template/build/pipelines/iac_templates/*"
-      - 'build/terraform/*'
-      - "terraform/*"
+      - "repo_template/build/pipelines/*"
+      - "repo_template/build/pipelines/code_quality_templates/*"
+      - "repo_template/build/pipelines/iac_templates/*"
+      - 'repo_template/build/terraform/*'
+      - "repo_template/build/terraform/*"
+      - "repo_template/build/terraform_local/*"
     exclude:
       - "*"
 stages:
