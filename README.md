@@ -5,7 +5,7 @@
 *** below badges are examples, please replace the badges with the badges for your pipelines and repos
 -->
 
-[![Build Status](https://dev.azure.com/bcagroup/BCA.Operations.Utilities/_apis/build/status/repo_template%20-%20Code%20Quality%20Checks?branchName=main&label=Code%20Quality%20Check%20Pipeline)](https://dev.azure.com/bcagroup/BCA.Operations.Utilities/_build/latest?definitionId=2800&branchName=main)
+[![Build Status](https://dev.azure.com/bcagroup/BCA.Operations.Utilities/_apis/build/status/repo_template%20-%20Code%20Quality%20Checks?branchName=main&label=repo_template%20-%20Code%20Quality%20Checks)](https://dev.azure.com/bcagroup/BCA.Operations.Utilities/_build/latest?definitionId=3061&branchName=main) [![Build Status](https://dev.azure.com/bcagroup/BCA.Operations.Utilities/_apis/build/status/repo_template%20-%20Infrastructure%20Quality%20Checks?branchName=main&label=repo_template%20-%20Infrastructure%20Quality%20Checks)](https://dev.azure.com/bcagroup/BCA.Operations.Utilities/_build/latest?definitionId=3062&branchName=main)
 
 <!-- Made With Badges -->
 <!--
@@ -419,23 +419,23 @@ Use this space to list resources you find helpful and would like to give credit 
 [Usage_Guide.md]: /docs/usage_guide.md
 
 <!-- CODE QUALITY TEMPLATE LINKS -->
-[Checkmarx_KICS.yml]: /build/pipelines/code_quality_templates/checkmarx_kics.yml
-[Checkov.yml]: /build/pipelines/code_quality_templates/checkov.yml
-[Checkov_baseline_creator.yml]: /build/pipelines/code_quality_templates/checkov_baseline_creator.yml
-[GitHub_Super_Linter.yml]: /build/pipelines/code_quality_templates/github_super_linter.yml
-[Infracost.yml]: /build/pipelines/code_quality_templates/Infracost.yml
-[Mega_Linter.yml]: /build/pipelines/code_quality_templates/mega_linter.yml
-[OWASP.yml]: /build/pipelines/code_quality_templates/owasp.yml
-[TFComplianceCheck.yml]: /build/pipelines/code_quality_templates/tfcompliancecheck.yml
-[template_updater.yml]: /build/pipelines/code_quality_templates/template_updater.yml
-[Terrascan.yml]: /build/pipelines/code_quality_templates/terrascan.yml
-[TFLint.yml]: /build/pipelines/code_quality_templates/tflint.yml
-[TFSec.yml]: /build/pipelines/code_quality_templates/tfsec.yml
+[Checkmarx_KICS.yml]: /build/pipelines/repo_template/build/pipelines/code_quality_templates/checkmarx_kics.yml
+[Checkov.yml]: /build/pipelines/repo_template/build/pipelines/code_quality_templates/checkov.yml
+[Checkov_baseline_creator.yml]: /build/pipelines/repo_template/build/pipelines/code_quality_templates/checkov_baseline_creator.yml
+[GitHub_Super_Linter.yml]: /build/pipelines/repo_template/build/pipelines/code_quality_templates/github_super_linter.yml
+[Infracost.yml]: /build/pipelines/repo_template/build/pipelines/code_quality_templates/Infracost.yml
+[Mega_Linter.yml]: /build/pipelines/repo_template/build/pipelines/code_quality_templates/mega_linter.yml
+[OWASP.yml]: /build/pipelines/repo_template/build/pipelines/code_quality_templates/owasp.yml
+[TFComplianceCheck.yml]: /build/pipelines/repo_template/build/pipelines/code_quality_templates/tfcompliancecheck.yml
+[template_updater.yml]: /build/pipelines/repo_template/build/pipelines/code_quality_templates/template_updater.yml
+[Terrascan.yml]: /build/pipelines/repo_template/build/pipelines/code_quality_templates/terrascan.yml
+[TFLint.yml]: /build/pipelines/repo_template/build/pipelines/code_quality_templates/tflint.yml
+[TFSec.yml]: /build/pipelines/repo_template/build/pipelines/code_quality_templates/tfsec.yml
 
 <!-- IAC TEMPLATE LINKS-->
-[terraform_apply.yml]: /build/pipelines/iac_templates/terraform_apply.yml
-[terraform_plan.yml]: /build/pipelines/iac_templates/terraform_plan.yml
-[variables.yml]: /build/pipelines/iac_templates/variables.yml
+[terraform_apply.yml]: /build/pipelines/repo_template/build/pipelines/iac_templates/terraform_apply.yml
+[terraform_plan.yml]: /build/pipelines/repo_template/build/pipelines/iac_templates/terraform_plan.yml
+[variables.yml]: /build/pipelines/repo_template/build/pipelines/iac_templates/variables.yml
 
 <!-- PIPELINE LINKS -->
 [infrastructure.yml]: /build/pipelines/infrastructure.yml

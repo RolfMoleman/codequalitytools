@@ -480,27 +480,27 @@ Once the scan has been ran the following steps are then also ran:
 [Usage_Guide.md]: ./docs/usage_guide.md
 
 <!-- CODE QUALITY TEMPLATE LINKS -->
-[Checkmarx_KICS.yml]: ./build/pipelines/code_quality_templates/checkmarx_kics.yml
-[Checkov.yml]: ./build/pipelines/code_quality_templates/checkov.yml
-[Checkov_baseline_creator.yml]: ./build/pipelines/code_quality_templates/checkov_baseline_creator.yml
-[GitHub_Super_Linter.yml]: ./build/pipelines/code_quality_templates/github_super_linter.yml
-[Infracost.yml]: ./build/pipelines/code_quality_templates/Infracost.yml
-[Mega_Linter.yml]: ./build/pipelines/code_quality_templates/mega_linter.yml
-[OWASP.yml]: ./build/pipelines/code_quality_templates/owasp.yml
-[TFComplianceCheck.yml]: ./build/pipelines/code_quality_templates/tfcompliancecheck.yml
-[template_updater.yml]: ./build/pipelines/code_quality_templates/template_updater.yml
-[Terrascan.yml]: ./build/pipelines/code_quality_templates/terrascan.yml
-[TFLint.yml]: ./build/pipelines/code_quality_templates/tflint.yml
-[TFSec.yml]: ./build/pipelines/code_quality_templates/tfsec.yml
+[Checkmarx_KICS.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/code_quality_templates/checkmarx_kics.yml
+[Checkov.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/code_quality_templates/checkov.yml
+[Checkov_baseline_creator.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/code_quality_templates/checkov_baseline_creator.yml
+[GitHub_Super_Linter.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/code_quality_templates/github_super_linter.yml
+[Infracost.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/code_quality_templates/Infracost.yml
+[Mega_Linter.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/code_quality_templates/mega_linter.yml
+[OWASP.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/code_quality_templates/owasp.yml
+[TFComplianceCheck.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/code_quality_templates/tfcompliancecheck.yml
+[template_updater.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/code_quality_templates/template_updater.yml
+[Terrascan.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/code_quality_templates/terrascan.yml
+[TFLint.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/code_quality_templates/tflint.yml
+[TFSec.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/code_quality_templates/tfsec.yml
 
 <!-- IAC TEMPLATE LINKS-->
-[terraform_apply.yml]: ./build/pipelines/iac_templates/terraform_apply.yml
-[terraform_plan.yml]: ./build/pipelines/iac_templates/terraform_plan.yml
-[variables.yml]: ./build/pipelines/iac_templates/variables.yml
+[terraform_apply.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/iac_templates/terraform_apply.yml
+[terraform_plan.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/iac_templates/terraform_plan.yml
+[variables.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/iac_templates/variables.yml
 
 <!-- PIPELINE LINKS -->
-[infrastructure.yml]: ./build/pipelines/infrastructure.yml
-[code_quality.yml]: ./build/pipelines/code_quality.yml
+[infrastructure.yml]: /repo_template/build/pipelines/infrastructure.yml
+[code_quality.yml]: /repo_template/build/pipelines/code_quality.yml
 
 <!-- GitHub stuff-->
 <!--

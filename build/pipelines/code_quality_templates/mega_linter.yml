@@ -58,7 +58,7 @@ steps:
     enabled: true
     name: "Publish_MegaLinter_Report"
     inputs:
-      PathtoPublish: "$(System.DefaultWorkingDirectory)/report/"
+      PathtoPublish: "$(System.DefaultWorkingDirectory)/megalinter-reports/"
       ArtifactName: MegaLinterReport-$(environment_tag)
 
   #copy sarif files to sarif directory to avoid polluting CodeAnalysisLogs
@@ -69,14 +69,13 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        cd $(System.DefaultWorkingDirectory)/report
-        $files = dir -R -a
-        mkdir sarif
+        cd $(System.DefaultWorkingDirectory)/megalinter-reports
+        $files = dir -R --all
         ForEach($file in $files)
         {
           if($file.extension.Contains("sarif"))
           {
-              Copy-Item -Path $file.FullName -Destination $(System.DefaultWorkingDirectory)/report/sarif -Force
+              Copy-Item -Path $file.FullName -Destination $(System.DefaultWorkingDirectory)/megalinter-reports/sarif -Force
           }
           else
           {
@@ -94,14 +93,14 @@ steps:
     enabled: true
     name: "Publish_megalinter_scan"
     inputs:
-      PathtoPublish: "$(System.DefaultWorkingDirectory)/report/sarif"
+      PathtoPublish: "$(System.DefaultWorkingDirectory)/megalinter-reports/sarif"
       ArtifactName: "CodeAnalysisLogs"
       publishLocation: "container"
 
   - script: |
       npm install -g tap-junit
       mkdir megalinter-reports_converted/
-      cd ./report/tap
+      cd ./megalinter-reports/tap
       for report in *; do
       ReportName=$(echo $report | sed -n "s/mega-linter-\s*\(\S*\).tap$/\1/p")
       # workaround for https://github.com/dhershman1/tap-junit/issues/30#issuecomment-744462006
@@ -111,11 +110,11 @@ steps:
       ## Converting TAP files into xml files with JUnit5 format
       #  cat $report | tap-junit -p -s "mega-linter" > ../../megalinter-reports_converted/${report}.xml
       #Carls method
-        cat $report | tap-junit --pretty --suite $ReportName --input ${report} > ../../megalinter-reports_converted/${ReportName}.xml
+        cat $report | tap-junit --pretty --suite $ReportName --input ${report} > $(System.DefaultWorkingDirectory)/megalinter-reports_converted/${ReportName}.xml
       # Remove escaping on newlines for readability
-        sed -i 's/\\n/\n/g' ../../megalinter-reports_converted/${report}.xml
+        sed -i 's/\\n/\n/g' $(System.DefaultWorkingDirectory)/megalinter-reports_converted/${report}.xml
       # Replace ANSI colors as they are illegal characters
-        sed -i 's/\x1b\[[0-9;]*m//g' ../../megalinter-reports_converted/${report}.xml
+        sed -i 's/\x1b\[[0-9;]*m//g' $(System.DefaultWorkingDirectory)/megalinter-reports_converted/${report}.xml
       done
     condition: succeededOrFailed()
     displayName: "Convert tap reports to junit"

@@ -40,7 +40,7 @@ steps:
       git merge --allow-unrelated-histories -s ours repo_template/main 
 
       echo "get updates just for code_quality_templates directory"
-      git read-tree --prefix=build/pipelines/code_quality_templates/ -u repo_template/main:build/pipelines/code_quality_templates
+      git read-tree --prefix=build/pipelines/repo_template/build/pipelines/code_quality_templates/ -u repo_template/main:build/pipelines/code_quality_templates
 
       echo "Adding new files from repo_template in build/pipelines/code_quality_templates that dont exist here"
       git commit -m 'Adding new files from repo_template in build/pipelines/code_quality_templates directory'
@@ -87,7 +87,7 @@ What this template does is:
 * add a new git remote called repo_template pointed to the repo_template repository under the Azure Devops project called BCA.Operations.Utilities and fetches from it
 * create a new branch called `repo_template-master_updates`
 * perform a git merge allowing unrelated histories from the master branch of the repo_template repository using the merge strategy `ours` to keep the changes in this Repo
-* perform a git read-tree to see what is different between the contents of `build/pipelines/code_quality_templates/` in this Repo and in the repo_template Repo
+* perform a git read-tree to see what is different between the contents of `build/pipelines/repo_template/build/pipelines/code_quality_templates/` in this Repo and in the repo_template Repo
 * Adds in the new files
 * perform a fetch from the repo_template
 * perform a git read-tree to see what is different between the contents of `docs/code_quality/` in this Repo and in the repo_template Repo
@@ -145,24 +145,24 @@ What this template does is:
 [TFSec]: ./docs/code_quality/tfsec.md
 
 <!-- CODE QUALITY TEMPLATE LINKS -->
-[Checkmarx_KICS.yml]: ./build/pipelines/code_quality_templates/checkmarx_kics.yml
-[Checkov.yml]: ./build/pipelines/code_quality_templates/checkov.yml
-[Checkov_baseline_creator.yml]: ./build/pipelines/code_quality_templates/checkov_baseline_creator.yml
-[GitHub_Super_Linter.yml]: ./build/pipelines/code_quality_templates/github_super_linter.yml
-[Infracost.yml]: ./build/pipelines/code_quality_templates/Infracost.yml
-[Mega_Linter.yml]: ./build/pipelines/code_quality_templates/mega_linter.yml
-[OWASP.yml]: ./build/pipelines/code_quality_templates/owasp.yml
-[TFComplianceCheck.yml]: ./build/pipelines/code_quality_templates/tfcompliancecheck.yml
-[template_updater.yml]: ./build/pipelines/code_quality_templates/template_updater.yml
-[Terrascan.yml]: ./build/pipelines/code_quality_templates/terrascan.yml
-[TFLint.yml]: ./build/pipelines/code_quality_templates/tflint.yml
-[TFSec.yml]: ./build/pipelines/code_quality_templates/tfsec.yml
+[Checkmarx_KICS.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/code_quality_templates/checkmarx_kics.yml
+[Checkov.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/code_quality_templates/checkov.yml
+[Checkov_baseline_creator.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/code_quality_templates/checkov_baseline_creator.yml
+[GitHub_Super_Linter.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/code_quality_templates/github_super_linter.yml
+[Infracost.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/code_quality_templates/Infracost.yml
+[Mega_Linter.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/code_quality_templates/mega_linter.yml
+[OWASP.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/code_quality_templates/owasp.yml
+[TFComplianceCheck.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/code_quality_templates/tfcompliancecheck.yml
+[template_updater.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/code_quality_templates/template_updater.yml
+[Terrascan.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/code_quality_templates/terrascan.yml
+[TFLint.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/code_quality_templates/tflint.yml
+[TFSec.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/code_quality_templates/tfsec.yml
 
 <!-- IAC TEMPLATE LINKS-->
-[terraform_apply.yml]: ./build/pipelines/iac_templates/terraform_apply.yml
-[terraform_plan.yml]: ./build/pipelines/iac_templates/terraform_plan.yml
-[variables.yml]: ./build/pipelines/iac_templates/variables.yml
+[terraform_apply.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/iac_templates/terraform_apply.yml
+[terraform_plan.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/iac_templates/terraform_plan.yml
+[variables.yml]: /repo_template/build/pipelines/repo_template/build/pipelines/iac_templates/variables.yml
 
 <!-- PIPELINE LINKS -->
-[infrastructure.yml]: ./build/pipelines/infrastructure.yml
-[code_quality.yml]: ./build/pipelines/code_quality.yml
+[infrastructure.yml]: /repo_template/build/pipelines/infrastructure.yml
+[code_quality.yml]: /repo_template/build/pipelines/code_quality.yml
