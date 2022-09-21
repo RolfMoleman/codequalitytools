@@ -1,1 +1,4 @@
-##this is a blank terraform variables file ##
+##this is where you include your UAT specific variables ##
+
+environment_tag = "uat"
+subscription_id = ""
