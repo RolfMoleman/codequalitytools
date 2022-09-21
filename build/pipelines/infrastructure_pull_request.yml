@@ -52,7 +52,7 @@ stages:
       - job: dev_env_provisioning
         timeoutInMinutes: 0
         variables:
-          - template: repo_template/build/pipelines/iac_templates/variables.yml
+          - template: iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
         displayName: "dev"
@@ -60,7 +60,7 @@ stages:
           name: "bca-linux-pool"
         steps:
           - checkout: self
-          - template: repo_template/build/pipelines/iac_templates/terraform_plan.yml
+          - template: iac_templates/terraform_plan.yml
           - task: PublishPipelineArtifact@1
             inputs:
               path: $(System.DefaultWorkingDirectory)/repo_template/build/terraform/plan_$(environment_tag)
@@ -75,7 +75,7 @@ stages:
       - job: uat_env_provisioning
         timeoutInMinutes: 0
         variables:
-          - template: repo_template/build/pipelines/iac_templates/variables.yml
+          - template: iac_templates/variables.yml
             parameters:
               environmentTag: "uat"
         displayName: "uat"
@@ -83,7 +83,7 @@ stages:
           name: "bca-linux-pool"
         steps:
           - checkout: self
-          - template: repo_template/build/pipelines/iac_templates/terraform_plan.yml
+          - template: iac_templates/terraform_plan.yml
           - task: PublishPipelineArtifact@1
             inputs:
               path: $(System.DefaultWorkingDirectory)/repo_template/build/terraform/plan_$(environment_tag)
@@ -98,7 +98,7 @@ stages:
       - job: prod_env_provisioning
         timeoutInMinutes: 0
         variables:
-          - template: repo_template/build/pipelines/iac_templates/variables.yml
+          - template: iac_templates/variables.yml
             parameters:
               environmentTag: "prod"
         displayName: "prod"
@@ -106,7 +106,7 @@ stages:
           name: "bca-linux-pool"
         steps:
           - checkout: self
-          - template: repo_template/build/pipelines/iac_templates/terraform_plan.yml
+          - template: iac_templates/terraform_plan.yml
           - task: PublishPipelineArtifact@1
             inputs:
               path: $(System.DefaultWorkingDirectory)/repo_template/build/terraform/plan_$(environment_tag)
