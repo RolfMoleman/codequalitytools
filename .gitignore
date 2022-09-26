@@ -354,6 +354,18 @@ _TeamCity*
 ### .tfvars files
 
 *.tfvars
+
+!/build/terraform/environment/default.tfvars
+!/build/terraform/environment/dev/variables.tfvars
+!/build/terraform/environment/poc/variables.tfvars
+!/build/terraform/environment/prod/variables.tfvars
+!/build/terraform/environment/uat/variables.tfvars
+
+!/build/terraform_local/environment/default.tfvars
+!/build/terraform_local/environment/dev/variables.tfvars
+!/build/terraform_local/environment/poc/variables.tfvars
+!/build/terraform_local/environment/prod/variables.tfvars
+!/build/terraform_local/environment/uat/variables.tfvars
 !terraform.tfvars
 
 ### terraform plans
