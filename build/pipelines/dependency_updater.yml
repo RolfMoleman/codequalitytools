@@ -4,6 +4,10 @@ pool:
 schedules:
 - cron: "0 0 * * *"
   displayName: Daily Dependabot run
+  batch: false
+  branches:
+    include:
+      - "*"
 
 steps:
 
