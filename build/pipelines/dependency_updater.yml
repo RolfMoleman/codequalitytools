@@ -33,6 +33,8 @@ steps:
                -j 3 \
                --path vendor
     echo "run script"
+    mkdir dependabot
+    chmod a+w dependabot
     dependabot-devops.sh
   displayName: install dependencies
   workingDirectory: "$(System.DefaultWorkingDirectory)"
