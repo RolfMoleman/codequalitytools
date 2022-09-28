@@ -11,22 +11,31 @@ schedules:
 
 steps:
 
-- script: |
-    git clone https://github.com/dependabot/dependabot-script.git
-  displayName: clone dependabot repo
-  
-- script: docker pull dependabot/dependabot-core
-  displayName: pull dependabot-core Docker image
+#- script: |
+#    git clone https://github.com/dependabot/dependabot-script.git
+#  displayName: clone dependabot repo
+#  
+#- script: docker pull dependabot/dependabot-core:latest
+#  displayName: pull dependabot-core Docker image
 
 - script: |
+    echo "Get repo"
+    git clone https://github.com/dependabot/dependabot-script.git
+    echo "pull docker image"
+    docker pull dependabot/dependabot-core:latest
+    echo "change directory"
     cd dependabot-script
+    echo "Run docker"
     docker run \
                --user $(id -u):$(id -g) \
                -v "$(pwd):/home/dependabot/dependabot-script" \
                -w /home/dependabot/dependabot-script dependabot/dependabot-core bundle install \
                -j 3 \
                --path vendor
+    echo "run script"
+    
   displayName: install dependencies
+  workingDirectory: "$(System.DefaultWorkingDirectory)"
 
 - task: Bash@3
   inputs:
