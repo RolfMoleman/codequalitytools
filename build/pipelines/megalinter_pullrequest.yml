@@ -40,12 +40,23 @@ trigger:
       - "*"
 jobs:      
 - job: MegaLinter
+  timeoutInMinutes: 0
+  displayName: 'Run OX Security Megalinter'
+  variables:
+          - name: system.debug
+            value: true
+          - name: agent.diagnostic
+            value: true
+          - template: iac_templates/variables.yml
+            parameters:
+              environmentTag: "dev"
   pool:
-    vmImage: ubuntu-latest
+    vmImage: "ubuntu-latest"
     steps:
       # Pull MegaLinter docker image
       - script: docker pull oxsecurity/megalinter:latest
         displayName: Pull MegaLinter
+        
 
       # Run MegaLinter
       - script: |
