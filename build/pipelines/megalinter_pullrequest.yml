@@ -12,6 +12,16 @@ pr:
   paths:
     include:
       - "*"
+schedules:
+- cron: "0 0 * * *"
+  displayName: Daily Dependabot run
+  batch: false
+  # run even when there are no code changes
+  always: true
+  # run only on these branches
+  branches:
+    include:
+      - "*"
 trigger:
   batch: false
   branches:
