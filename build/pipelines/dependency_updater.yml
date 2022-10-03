@@ -42,6 +42,11 @@ jobs:
       value: 'Dependabot'
 
     steps:
+    
+      #checkout
+      - checkout: self
+        persistCredentials: true
+
       # Git Config
       - script: |
           echo "set git config to Dependabot user"
@@ -51,7 +56,6 @@ jobs:
         displayName: "Set git config for dependabot user"
         enabled: true
         name: "configure_gituser"
-        persistCredentials: true
 
       # Get the repo
       - script: git clone https://github.com/dependabot/dependabot-script.git
@@ -59,7 +63,6 @@ jobs:
         displayName: "Clone Dependabot config repo"
         enabled: true
         name: "clone_dependabot"
-        persistCredentials: true
 
       # Build the docker image
       - script: |
@@ -70,7 +73,6 @@ jobs:
         displayName: "Build Dependabot Image"
         enabled: true
         name: "build_image"
-        persistCredentials: true
 
       # Pass your vars to the docker image and execute
       # NOTE:
@@ -90,7 +92,6 @@ jobs:
         displayName: "Run Dependabot"
         enabled: true
         name: "run_dependabot"
-        persistCredentials: true
 
       #- script: |
       #    echo "Get repo"
