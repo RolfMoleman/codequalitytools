@@ -5,6 +5,8 @@
 ## Also run on all normal builds that aren't on the development or master/main branches
 ##
 name: $(Date:yy)-$(Date:MM)-$(Date:dd).$(Rev:r)
+pool:
+    vmImage: "ubuntu-latest"
 pr:
   branches:
     include:
@@ -42,6 +44,8 @@ jobs:
 - job: MegaLinter
   timeoutInMinutes: 0
   displayName: 'Run OX Security Megalinter'
+  pool:
+    vmImage: "ubuntu-latest"
   variables:
           - name: system.debug
             value: true
@@ -50,14 +54,17 @@ jobs:
           - template: iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
-  pool:
-    vmImage: "ubuntu-latest"
-    steps:
-      # Pull MegaLinter docker image
-      - script: docker pull oxsecurity/megalinter:latest
-        displayName: Pull MegaLinter
-        
+  steps:
+      #checkout
+      - checkout: self
 
+      # Pull MegaLinter docker image
+      - script: "docker pull oxsecurity/megalinter:latest"
+        condition: succeededOrFailed()
+        displayName: "Pull MegaLinter docker image"
+        enabled: true
+        name: "megalinter_pull"
+      
       # Run MegaLinter
       - script: |
           docker run -v $(System.DefaultWorkingDirectory):/tmp/lint \
@@ -72,20 +79,23 @@ jobs:
             -e BUILD_REPOSITORY_ID=$(Build.Repository.ID) \
             -e MEGALINTER_CONFIG='/repo_template/config/.mega-linter.yml' \
             oxsecurity/megalinter:latest
-        displayName: Run MegaLinter
+        condition: succeededOrFailed()
+        displayName: "Run MegaLinter docker image"
+        enabled: true
+        name: "megalinter_docker"
 
       # Upload MegaLinter reports
       - task: PublishPipelineArtifact@1
         condition: succeededOrFailed()
-        displayName: Upload MegaLinter reports
+        displayName: "Upload MegaLinter reports"
         inputs:
           targetPath: "$(System.DefaultWorkingDirectory)/megalinter-reports/"
-          artifactName: MegaLinterReport
+          artifactName: "MegaLinterReport"
       
       # Upload MegaLinter updated sources
       - task: PublishPipelineArtifact@1
         condition: succeededOrFailed()
-        displayName: Upload MegaLinter updated sources
+        displayName: "Upload MegaLinter updated sources"
         inputs:
           targetPath: "$(System.DefaultWorkingDirectory)/megalinter-reports/updated_sources/"
           artifactName: "MegaLinter updated sources"
