@@ -4,10 +4,10 @@ steps:
     displayName: "Infracost Setup"
     enabled: true
     inputs:
-      apiKey: '$(Infracost_key)'
-      version: '0.10.x'
-      currency: 'GBP'
-     #pricingApiEndpoint: '$(Infracost_api)'
+      apiKey: "$(Infracost_key)"
+      version: "0.10.x"
+      currency: "GBP"
+      #pricingApiEndpoint: '$(Infracost_api)'
       enableDashboard: false
 
   # Clone the base branch of the Repo (e.g. main/master) into a temp directory.
@@ -22,7 +22,7 @@ steps:
   - bash: |
       echo "Set currency to GBP"
       infracost configure set currency GBP
-      
+
       outputTypes=("json" "html" "table")
 
       for str in ${outputTypes[@]}; do
@@ -43,7 +43,7 @@ steps:
   - bash: |
       echo "Set currency to GBP"
       infracost configure set currency GBP
-      
+
       outputTypes=("json" "html" "table")
 
       for str in ${outputTypes[@]}; do
@@ -66,7 +66,6 @@ steps:
     displayName: "Generate Infracost diff"
     enabled: true
     workingDirectory: "$(System.DefaultWorkingDirectory)"
-
 
   # Publish the infracost diff as an artifact to Azure Pipelines
   - task: PublishBuildArtifacts@1

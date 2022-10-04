@@ -1,151 +1,151 @@
 steps:
   ### depending on  your code language, you may need a build step to compile your code before using OWASP Dependency Check.
   # Run OWASP Dependency check
-    - task: dependency-check-build-task@6
-      condition: succeededOrFailed()
-      displayName: "OWASP Dependency Check"
-      enabled: true
-      inputs:
-        projectName: '$(project_repo)' #The name of the project being scanned
-        scanPath: '$(System.DefaultWorkingDirectory)' #The path to scan. Supports Ant style paths (e.g. 'directory/**/*.jar').
-        #excludePath: '' #The path patterns to exclude from the scan. Supports Ant style path patterns (e.g. /exclude/).
-        format: 'ALL' #The output format to write to (XML, HTML, CSV, JSON, JUNIT, ALL). Multiple formats can be selected. The default is HTML.
-        #failOnCVSS: '0' #CVSS Failure Threshold. Threshold between 0 and 10 that will cause Dependency Check will return the exit code if a vulnerability with a CVSS score equal to or higher was identified.
-        suppressionPath: '' #The file path to the suppression XML file used to suppress false positives. This can be specified more than once to utilize multiple suppression files. The argument can be a local file path, a URL to a suppression file, or even a reference to a file on the class path.
-        reportsDirectory: '$(System.DefaultWorkingDirectory)/OWASP_Report' #Report output directory. On-prem build agents can specify a local directory to override the default location. The default location is the $COMMON_TESTRESULTSDIRECTORY\dependency-check directory.
-        #reportFilename: 'OWASP-report-$(environment_tag)' #Report output filename. Will set the report output name in 'reportsDirectory' to specified filename. Will not work if format is ALL, or multiple formats are supplied to the 'format' parameter. Filename must have an extension or dependency-check will assume it is a path.
-        warnOnCVSSViolation: true #Will only warn for found violations above the CVSS failure threshold instead of throwing an error. This build step will then succeed with issues instead of failing.
-        enableExperimental: true #Enable the experimental analyzers.
-        enableRetired: true #Enable the retired analyzers.
-        enableVerbose: true #Enable verbose logging.
-        #additionalArguments: '' #Pass additional command line arguments to the Dependency Check command line interface.
-        #localInstallPath: '' #The local path to the dependency-check installation directory (on-prem build agents only). Setting this field will run Dependency Check locally instead of downloading the installer onto the build agent.
-        #customRepo: '' #By default, the build task downloads the installer from the Dependency Check GitHub releases. Entering a value for this field will pull the installer package from a custom endpoint.
-        #dataMirror: '' #The https path to the compressed Dependency Check data directory (containing the odc.mv.db and jsrepository.JSON files).
+  - task: dependency-check-build-task@6
+    condition: succeededOrFailed()
+    displayName: "OWASP Dependency Check"
+    enabled: true
+    inputs:
+      projectName: "$(project_repo)" #The name of the project being scanned
+      scanPath: "$(System.DefaultWorkingDirectory)" #The path to scan. Supports Ant style paths (e.g. 'directory/**/*.jar').
+      #excludePath: '' #The path patterns to exclude from the scan. Supports Ant style path patterns (e.g. /exclude/).
+      format: "ALL" #The output format to write to (XML, HTML, CSV, JSON, JUNIT, ALL). Multiple formats can be selected. The default is HTML.
+      #failOnCVSS: '0' #CVSS Failure Threshold. Threshold between 0 and 10 that will cause Dependency Check will return the exit code if a vulnerability with a CVSS score equal to or higher was identified.
+      suppressionPath: "" #The file path to the suppression XML file used to suppress false positives. This can be specified more than once to utilize multiple suppression files. The argument can be a local file path, a URL to a suppression file, or even a reference to a file on the class path.
+      reportsDirectory: "$(System.DefaultWorkingDirectory)/OWASP_Report" #Report output directory. On-prem build agents can specify a local directory to override the default location. The default location is the $COMMON_TESTRESULTSDIRECTORY\dependency-check directory.
+      #reportFilename: 'OWASP-report-$(environment_tag)' #Report output filename. Will set the report output name in 'reportsDirectory' to specified filename. Will not work if format is ALL, or multiple formats are supplied to the 'format' parameter. Filename must have an extension or dependency-check will assume it is a path.
+      warnOnCVSSViolation: true #Will only warn for found violations above the CVSS failure threshold instead of throwing an error. This build step will then succeed with issues instead of failing.
+      enableExperimental: true #Enable the experimental analyzers.
+      enableRetired: true #Enable the retired analyzers.
+      enableVerbose: true #Enable verbose logging.
+      #additionalArguments: '' #Pass additional command line arguments to the Dependency Check command line interface.
+      #localInstallPath: '' #The local path to the dependency-check installation directory (on-prem build agents only). Setting this field will run Dependency Check locally instead of downloading the installer onto the build agent.
+      #customRepo: '' #By default, the build task downloads the installer from the Dependency Check GitHub releases. Entering a value for this field will pull the installer package from a custom endpoint.
+      #dataMirror: '' #The https path to the compressed Dependency Check data directory (containing the odc.mv.db and jsrepository.JSON files).
 
-    # Create work items to review failures
-    - task: CreateWorkItem@1
-      condition: failed()
-      displayName: 'Create work item'
-      enabled: true
-      inputs:
-        #teamProject: # Optional
-        workItemType: 'Product Backlog Item'
-        title: 'Review OWASP Dependency Check failures for $(project_repo) repository'
-        #assignedTo: # Optional
-        #areaPath: # Optional
-        #iterationPath: # Optional
-        fieldMappings: "Description=Please review the attached files and linked build" # Optional; Required if your process defines additional required work item fields
-        associate: true # Optional
-        associationType: 'foundinbuild' # Optional; Valid values: build, integratedInBuild, foundInBuild
-        # ===== Linking Inputs =====
-        #linkWorkItems: false # Optional
-        #linkType: # Required if linkWorkItems = true
-        #linkTarget: id # Optional; Valid values: id, wiql
-        #targetId: # Required if linkWorkItems = true and linkTarget = id
-        #targetWiql: # Required if linkWorkItems = true and linkTarget = wiql
-        limitWorkItemLinksToSameProject: true # Optional
-        linkPR: true # Optional
-        #linkCode: true # Optional
-        #commitsAndChangesets: # Required if linkCode = true
-        # ===== Attachments Inputs =====
-        addAttachments: true # Optional
-        attachmentsFolder: "$(System.DefaultWorkingDirectory)/OWASP_Report/" # Optional
-        attachments: '*.*' # Required if addAttachments = true
-        # ===== Duplicate Inputs =====
-        #preventDuplicates: false # Optional
-        #keyFields: # Required if preventDuplicates = true
-        #updateDuplicates: false # Optional
-        #updateRules: # Optional
-        # ===== Outputs Inputs =====
-        #createOutputs: false # Optional
-        #outputVariables: # Required if createOutputs = true
-        # ===== Advanced Inputs =====
-        #authToken: #Optional
-        #allowRedirectDowngrade: false # Optional  
+  # Create work items to review failures
+  - task: CreateWorkItem@1
+    condition: failed()
+    displayName: "Create work item"
+    enabled: true
+    inputs:
+      #teamProject: # Optional
+      workItemType: "Product Backlog Item"
+      title: "Review OWASP Dependency Check failures for $(project_repo) repository"
+      #assignedTo: # Optional
+      #areaPath: # Optional
+      #iterationPath: # Optional
+      fieldMappings: "Description=Please review the attached files and linked build" # Optional; Required if your process defines additional required work item fields
+      associate: true # Optional
+      associationType: "foundinbuild" # Optional; Valid values: build, integratedInBuild, foundInBuild
+      # ===== Linking Inputs =====
+      #linkWorkItems: false # Optional
+      #linkType: # Required if linkWorkItems = true
+      #linkTarget: id # Optional; Valid values: id, wiql
+      #targetId: # Required if linkWorkItems = true and linkTarget = id
+      #targetWiql: # Required if linkWorkItems = true and linkTarget = wiql
+      limitWorkItemLinksToSameProject: true # Optional
+      linkPR: true # Optional
+      #linkCode: true # Optional
+      #commitsAndChangesets: # Required if linkCode = true
+      # ===== Attachments Inputs =====
+      addAttachments: true # Optional
+      attachmentsFolder: "$(System.DefaultWorkingDirectory)/OWASP_Report/" # Optional
+      attachments: "*.*" # Required if addAttachments = true
+      # ===== Duplicate Inputs =====
+      #preventDuplicates: false # Optional
+      #keyFields: # Required if preventDuplicates = true
+      #updateDuplicates: false # Optional
+      #updateRules: # Optional
+      # ===== Outputs Inputs =====
+      #createOutputs: false # Optional
+      #outputVariables: # Required if createOutputs = true
+      # ===== Advanced Inputs =====
+      #authToken: #Optional
+      #allowRedirectDowngrade: false # Optional
 
-    - task: owaspzap@1
-      condition: succeededOrFailed()
-      displayName: "OWASP ZAP Scan"
-      enabled: false    
-      inputs:
-        aggressivemode: true #If unchecked a baseline-zap scan will be used. Aggressive mode is not recommended for continuous integration
-        #threshold: '50' #Sets the minimum threshold for a passing zap scan. Defaults to 50
-        #scantype: 'targetedScan' #Scan target type.Options are Targeted scan or scan on agent. Omit Scantype altogether for "Scan on agent"
-        #url: '' # required if "scantype: 'targetedScan'" enabled Root URL to begin crawling. URL beginning with http:// or https:// is required for the scanner to initialize.
-        provideCustomContext: false # Allows passing a custom ZAP context file into the scanner
-        contextPath: '' #required if "provideCustomContext: true" enabled. Path to your custom context file from working directory
-        port: '443' #Port to scan on the target. Scans port 80 by default.
+  - task: owaspzap@1
+    condition: succeededOrFailed()
+    displayName: "OWASP ZAP Scan"
+    enabled: false
+    inputs:
+      aggressivemode: true #If unchecked a baseline-zap scan will be used. Aggressive mode is not recommended for continuous integration
+      #threshold: '50' #Sets the minimum threshold for a passing zap scan. Defaults to 50
+      #scantype: 'targetedScan' #Scan target type.Options are Targeted scan or scan on agent. Omit Scantype altogether for "Scan on agent"
+      #url: '' # required if "scantype: 'targetedScan'" enabled Root URL to begin crawling. URL beginning with http:// or https:// is required for the scanner to initialize.
+      provideCustomContext: false # Allows passing a custom ZAP context file into the scanner
+      contextPath: "" #required if "provideCustomContext: true" enabled. Path to your custom context file from working directory
+      port: "443" #Port to scan on the target. Scans port 80 by default.
 
-    - task: OwaspZapScan@2
-      condition: succeededOrFailed()
-      displayName: "OWASP Zed Attack Proxy Scan"
-      enabled: false
-      inputs:
-        ZapApiUrl: 'zap_url'
-        ZapApiKey: 'API_key'
-        TargetUrl: 'Target_url'
-        ExecuteActiveScan: true
-        EnableVerifications: false
-        ReportFileDestination: '$(System.DefaultWorkingDirectory)/OWASP_Report'
-    
-    # Publish the OWASP reports as an artifact to Azure Pipelines
-    - task: PublishBuildArtifacts@1
-      condition: succeededOrFailed()
-      displayName: "Publish OWASP Reports"
-      enabled: true
-      inputs:
-        PathtoPublish: "$(System.DefaultWorkingDirectory)/OWASP_Report"
-        ArtifactName: OWASPReports-$(environment_tag)
+  - task: OwaspZapScan@2
+    condition: succeededOrFailed()
+    displayName: "OWASP Zed Attack Proxy Scan"
+    enabled: false
+    inputs:
+      ZapApiUrl: "zap_url"
+      ZapApiKey: "API_key"
+      TargetUrl: "Target_url"
+      ExecuteActiveScan: true
+      EnableVerifications: false
+      ReportFileDestination: "$(System.DefaultWorkingDirectory)/OWASP_Report"
 
-    #copy sarif files to sarif directory to avoid polluting CodeAnalysisLogs
-    - task: Powershell@2
-      condition: succeededOrFailed()
-      displayName: "Copy Sarif Files"
-      enabled: true
-      inputs:
-        targetType: 'inline'
-        script: |
-          cd $(System.DefaultWorkingDirectory)/OWASP_Report
-          $files = dir
-          mkdir sarif
-          ForEach($file in $files)
+  # Publish the OWASP reports as an artifact to Azure Pipelines
+  - task: PublishBuildArtifacts@1
+    condition: succeededOrFailed()
+    displayName: "Publish OWASP Reports"
+    enabled: true
+    inputs:
+      PathtoPublish: "$(System.DefaultWorkingDirectory)/OWASP_Report"
+      ArtifactName: OWASPReports-$(environment_tag)
+
+  #copy sarif files to sarif directory to avoid polluting CodeAnalysisLogs
+  - task: Powershell@2
+    condition: succeededOrFailed()
+    displayName: "Copy Sarif Files"
+    enabled: true
+    inputs:
+      targetType: "inline"
+      script: |
+        cd $(System.DefaultWorkingDirectory)/OWASP_Report
+        $files = dir
+        mkdir sarif
+        ForEach($file in $files)
+        {
+          if($file.extension.Contains("sarif"))
           {
-            if($file.extension.Contains("sarif"))
-            {
-                Copy-Item -Path $file.FullName -Destination sarif -Force
-            }
-            else
-            {
-                Write-output $file.FullName "does not need moving"
-            }      
+              Copy-Item -Path $file.FullName -Destination sarif -Force
           }
-        showWarnings: true
-        pwsh: true
-        workingDirectory: '$(System.DefaultWorkingDirectory)'
+          else
+          {
+              Write-output $file.FullName "does not need moving"
+          }      
+        }
+      showWarnings: true
+      pwsh: true
+      workingDirectory: "$(System.DefaultWorkingDirectory)"
 
-    #publish owasp Scan
-    - task: PublishBuildArtifacts@1
-      condition: succeededOrFailed()
-      displayName: "Publish owasp Scan"
-      enabled: true
-      name: "Publish_owasp_scan"
-      inputs:
-        PathtoPublish: "$(System.DefaultWorkingDirectory)/OWASP_Report/sarif"
-        ArtifactName: "CodeAnalysisLogs"
-        publishLocation: "container"
+  #publish owasp Scan
+  - task: PublishBuildArtifacts@1
+    condition: succeededOrFailed()
+    displayName: "Publish owasp Scan"
+    enabled: true
+    name: "Publish_owasp_scan"
+    inputs:
+      PathtoPublish: "$(System.DefaultWorkingDirectory)/OWASP_Report/sarif"
+      ArtifactName: "CodeAnalysisLogs"
+      publishLocation: "container"
 
-    # publish the test results
-    - task: PublishTestResults@2
-      displayName: "Publish OWASP Test Results"
-      condition: succeededOrFailed()
-      inputs:
-        testResultsFormat: "JUnit" # Options JUnit, NUnit, VSTest, xUnit, cTest
-        testResultsFiles: |
-          **/*OWASP-report-$(environment_tag).xml
-          **/*junit.xml
-        searchFolder: "$(System.DefaultWorkingDirectory)/OWASP_Report"
-        mergeTestResults: false
-        testRunTitle: "OWASP Dependency Check"
-        failTaskOnFailedTests: false
-        publishRunAttachments: true
+  # publish the test results
+  - task: PublishTestResults@2
+    displayName: "Publish OWASP Test Results"
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFormat: "JUnit" # Options JUnit, NUnit, VSTest, xUnit, cTest
+      testResultsFiles: |
+        **/*OWASP-report-$(environment_tag).xml
+        **/*junit.xml
+      searchFolder: "$(System.DefaultWorkingDirectory)/OWASP_Report"
+      mergeTestResults: false
+      testRunTitle: "OWASP Dependency Check"
+      failTaskOnFailedTests: false
+      publishRunAttachments: true

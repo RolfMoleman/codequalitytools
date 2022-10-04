@@ -5,26 +5,26 @@ steps:
     enabled: true
     name: "Terraform_Version_replacement"
     inputs:
-      rootDirectory: '$(System.DefaultWorkingDirectory)/repo_template/build/terraform'
-      targetFiles: '**/*.tf'
-      encoding: 'auto'
-      tokenPattern: 'rm'
+      rootDirectory: "$(System.DefaultWorkingDirectory)/repo_template/build/terraform"
+      targetFiles: "**/*.tf"
+      encoding: "auto"
+      tokenPattern: "rm"
       writeBOM: true
-      escapeType: 'none'
-      actionOnMissing: 'fail'
+      escapeType: "none"
+      actionOnMissing: "fail"
       keepToken: true
-      actionOnNoFiles: 'warn'
+      actionOnNoFiles: "warn"
       enableTransforms: false
       enableRecursion: false
       useLegacyPattern: false
       enableTelemetry: true
-  
+
   - task: terraformInstaller@0
     condition: succeededOrFailed()
-    displayName: 'Install terraform version 1.2.2'
+    displayName: "Install terraform version 1.2.2"
     enabled: true
     inputs:
-      terraformVersion: '$(terraform_installer_version)'
+      terraformVersion: "$(terraform_installer_version)"
 
   - script: |
       terraform init \
@@ -34,7 +34,7 @@ steps:
         -backend-config="key=$(state-key)" \
         -backend-config="access_key=$(access-key)"
     condition: succeeded()
-    displayName: 'terraform init'
+    displayName: "terraform init"
     enabled: true
     workingDirectory: "repo_template/build/terraform"
 
@@ -80,18 +80,18 @@ steps:
   # Create work items to review failures
   - task: CreateWorkItem@1
     condition: failed()
-    displayName: 'Create work item'
+    displayName: "Create work item"
     enabled: true
     inputs:
       #teamProject: # Optional
-      workItemType: 'Product Backlog Item'
-      title: 'Review terraform Compliance Check failures for $(project_repo) repository'
+      workItemType: "Product Backlog Item"
+      title: "Review terraform Compliance Check failures for $(project_repo) repository"
       #assignedTo: # Optional
       #areaPath: # Optional
       #iterationPath: # Optional
       fieldMappings: "Description=Please review the attached files and linked build" # Optional; Required if your process defines additional required work item fields
       associate: true # Optional
-      associationType: 'foundinbuild' # Optional; Valid values: build, integratedInBuild, foundInBuild
+      associationType: "foundinbuild" # Optional; Valid values: build, integratedInBuild, foundInBuild
       # ===== Linking Inputs =====
       #linkWorkItems: false # Optional
       #linkType: # Required if linkWorkItems = true
@@ -105,7 +105,7 @@ steps:
       # ===== Attachments Inputs =====
       addAttachments: true # Optional
       attachmentsFolder: "$(System.DefaultWorkingDirectory)/terraformComplianceReport/" # Optional
-      attachments: '*.*' # Required if addAttachments = true
+      attachments: "*.*" # Required if addAttachments = true
       # ===== Duplicate Inputs =====
       #preventDuplicates: false # Optional
       #keyFields: # Required if preventDuplicates = true
@@ -151,4 +151,3 @@ steps:
     enabled: true
     name: "Remove_terraform_Quality_Check_Docker_Images"
     workingDirectory: "$(System.DefaultWorkingDirectory)"
-    

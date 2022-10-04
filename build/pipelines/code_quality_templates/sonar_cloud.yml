@@ -2,25 +2,25 @@
 steps:
   - task: SonarCloudPrepare@1
     condition: succeededOrFailed()
-    displayName: 'Prepare for sonarcloud analysis'
+    displayName: "Prepare for sonarcloud analysis"
     enabled: true
     inputs:
-      SonarCloud: 'Sonar Cloud'
-      organization: '$(sonarcloud_organization)'
-      scannerMode: 'CLI'
-      configMode: 'manual'
-      cliProjectKey: '$(sonarcloud_cliprojectkey)'
-      cliProjectName: '$(sonarcloud_cliprojectname)'
-      cliSources: '.'
+      SonarCloud: "Sonar Cloud"
+      organization: "$(sonarcloud_organization)"
+      scannerMode: "CLI"
+      configMode: "manual"
+      cliProjectKey: "$(sonarcloud_cliprojectkey)"
+      cliProjectName: "$(sonarcloud_cliprojectname)"
+      cliSources: "."
 
   - task: SonarCloudAnalyze@1
     condition: succeededorfailed()
-    displayName: 'Run SonarCloud Analysis'
+    displayName: "Run SonarCloud Analysis"
     enabled: true
 
   - task: SonarCloudPublish@1
     condition: succeededorfailed()
-    displayName: 'Publish Sonar Cloud results on build summary'
+    displayName: "Publish Sonar Cloud results on build summary"
     enabled: true
     inputs:
-      pollingTimeoutSec: '300'
+      pollingTimeoutSec: "300"
