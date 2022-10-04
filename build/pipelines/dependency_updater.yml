@@ -68,7 +68,6 @@ jobs:
       - script: |
           cd dependabot-script
           docker build -t "dependabot/dependabot-script" -f Dockerfile .
-                condition: succeededOrFailed()
         condition: succeededOrFailed()
         displayName: "Build Dependabot Image"
         enabled: true
