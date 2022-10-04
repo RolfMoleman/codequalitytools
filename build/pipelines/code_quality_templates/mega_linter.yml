@@ -3,9 +3,18 @@ steps:
 
       docker pull oxsecurity/megalinter:latest
       docker run \
-      --env MEGALINTER_CONFIG='/repo_template/config/.mega-linter.yml' \
+          --env AZURE_COMMENT_REPORTER='true' \
+          --env GIT_AUTHORIZATION_BEARER=$(System.AccessToken) \
+          --env CI=true \
+          --env TF_BUILD=true \
+          --env SYSTEM_ACCESSTOKEN=$(System.AccessToken) \
+          --env SYSTEM_COLLECTIONURI=$(System.CollectionUri) \
+          --env SYSTEM_TEAMPROJECT=$(System.TeamProject) \
+          --env BUILD_BUILD_ID=$(Build.BuildId) \
+          --env BUILD_REPOSITORY_ID=$(Build.Repository.ID) \
+          --env MEGALINTER_CONFIG='/repo_template/config/.mega-linter.yml' \
       --volume $(pwd):/tmp/lint oxsecurity/megalinter:latest
-    condition: succeededOrFailed()
+    condition: and(succeededOrFailed(),ne(variables['Build.Reason'], 'PullRequest'))
     displayName: "Code Scan using Mega-Linter"
     enabled: true
     name: "Code_Scan_using_MegaLinter"

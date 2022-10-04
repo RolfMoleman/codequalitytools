@@ -4,6 +4,7 @@
 # See all available variables at https://megalinter.github.io/configuration/ and in linters documentation
 
 APPLY_FIXES: all # all, none, or list of linter keys
+CLEAR_REPORT_FOLDER: true
 # ENABLE: # If you use ENABLE variable, all other languages/formats/tooling-formats will be disabled by default
 # If you use ENABLE_LINTERS variable, all other linters will be disabled by default
 # ENABLE_LINTERS:
@@ -67,4 +68,4 @@ JSON_REPORTER_OUTPUT_DETAIL: "detailed"
 #CONFIG_REPORTER_SUB_FOLDER: IDE-config
 SHOW_SKIPPED_LINTERS: true
 VALIDATE_ALL_CODEBASE: true
-AZURE_COMMENT_REPORTER: true
+#AZURE_COMMENT_REPORTER: true
