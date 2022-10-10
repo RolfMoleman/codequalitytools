@@ -76,18 +76,18 @@ steps:
   # Create work items to review failures
   - task: CreateWorkItem@1
     condition: and(failed(), ne(variables['BRIDGECREWKEY'], ''))
-    displayName: 'Create work item'
+    displayName: "Create work item"
     enabled: false
     inputs:
       #teamProject: # Optional
-      workItemType: 'Product Backlog Item'
-      title: 'Review Bridgecrew failures for $(project_repo) repository'
+      workItemType: "Product Backlog Item"
+      title: "Review Bridgecrew failures for $(project_repo) repository"
       #assignedTo: # Optional
       #areaPath: # Optional
       #iterationPath: # Optional
       fieldMappings: "Description=Please review the attached files and linked build" # Optional; Required if your process defines additional required work item fields
       associate: true # Optional
-      associationType: 'foundinbuild' # Optional; Valid values: build, integratedInBuild, foundInBuild
+      associationType: "foundinbuild" # Optional; Valid values: build, integratedInBuild, foundInBuild
       # ===== Linking Inputs =====
       #linkWorkItems: false # Optional
       #linkType: # Required if linkWorkItems = true
@@ -101,7 +101,7 @@ steps:
       # ===== Attachments Inputs =====
       addAttachments: true # Optional
       attachmentsFolder: "$(System.DefaultWorkingDirectory)/CheckovReports/" # Optional
-      attachments: '*.*' # Required if addAttachments = true
+      attachments: "*.*" # Required if addAttachments = true
       # ===== Duplicate Inputs =====
       #preventDuplicates: false # Optional
       #keyFields: # Required if preventDuplicates = true
@@ -112,24 +112,24 @@ steps:
       #outputVariables: # Required if createOutputs = true
       # ===== Advanced Inputs =====
       #authToken: #Optional
-      #allowRedirectDowngrade: false # Optional  
+      #allowRedirectDowngrade: false # Optional
 
   # Create work items to review failures
   - task: CreateWorkItem@1
     condition: failed()
     #condition: and(failed(), eq(variables['BRIDGECREWKEY'], ''))
-    displayName: 'Create work item'
+    displayName: "Create work item"
     enabled: true
     inputs:
       #teamProject: # Optional
-      workItemType: 'Product Backlog Item'
-      title: 'Review Checkov failures for $(project_repo) repository'
+      workItemType: "Product Backlog Item"
+      title: "Review Checkov failures for $(project_repo) repository"
       #assignedTo: # Optional
       #areaPath: # Optional
       #iterationPath: # Optional
       fieldMappings: "Description=Please review the attached files and linked build" # Optional; Required if your process defines additional required work item fields
       associate: true # Optional
-      associationType: 'foundinbuild' # Optional; Valid values: build, integratedInBuild, foundInBuild
+      associationType: "foundinbuild" # Optional; Valid values: build, integratedInBuild, foundInBuild
       # ===== Linking Inputs =====
       #linkWorkItems: false # Optional
       #linkType: # Required if linkWorkItems = true
@@ -143,7 +143,7 @@ steps:
       # ===== Attachments Inputs =====
       addAttachments: true # Optional
       attachmentsFolder: "$(System.DefaultWorkingDirectory)/CheckovReports/" # Optional
-      attachments: '*.*' # Required if addAttachments = true
+      attachments: "*.*" # Required if addAttachments = true
       # ===== Duplicate Inputs =====
       #preventDuplicates: false # Optional
       #keyFields: # Required if preventDuplicates = true
@@ -154,7 +154,7 @@ steps:
       #outputVariables: # Required if createOutputs = true
       # ===== Advanced Inputs =====
       #authToken: #Optional
-      #allowRedirectDowngrade: false # Optional  
+      #allowRedirectDowngrade: false # Optional
 
   # Publish the Checkov report as an artifact to Azure Pipelines
   - task: PublishBuildArtifacts@1
@@ -172,7 +172,7 @@ steps:
     displayName: "Copy Sarif Files"
     enabled: true
     inputs:
-      targetType: 'inline'
+      targetType: "inline"
       script: |
         cd $(System.DefaultWorkingDirectory)/CheckovReports
         $files = dir
@@ -190,7 +190,7 @@ steps:
         }
       showWarnings: true
       pwsh: true
-      workingDirectory: '$(System.DefaultWorkingDirectory)'
+      workingDirectory: "$(System.DefaultWorkingDirectory)"
 
   #publish checkov Scan
   - task: PublishBuildArtifacts@1
@@ -226,4 +226,3 @@ steps:
     enabled: true
     name: "Remove_terraform_Quality_Check_Docker_Images"
     workingDirectory: "$(System.DefaultWorkingDirectory)"
-    

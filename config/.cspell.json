@@ -9,7 +9,7 @@
     // C# related keywords
     "csharp",
     // css, less, and scss related keywords
-    "css",    
+    "css",
     // list of file typescript
     "filetypes",
     // long list of fonts - to assist with css
@@ -19,7 +19,7 @@
     // html related keywords
     "html",
     // LaTex related words
-    "latex",    
+    "latex",
     // Terms that do not belong in the other dictionaries.
     "misc",
     // terms related to using nodejs.
@@ -35,14 +35,12 @@
     // Software Terms and concepts like “coroutine”, “debounce”, “tree”, etc.
     "softwareTerms",
     // keywords for TypeScript and JavaScript
-    "typescript"    
+    "typescript"
   ],
   // flagWords - list of words to be always considered incorrect
   // This is useful for offensive words and common spelling errors.
   // For example "hte" should be "the"
-  "flagWords": [
-    "hte"
-  ],
+  "flagWords": ["hte"],
   "ignorePaths": [
     "**/node_modules/**",
     "**/vscode-extension/**",

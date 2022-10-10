@@ -14,18 +14,18 @@ steps:
   # Create work items to review failures
   - task: CreateWorkItem@1
     condition: failed()
-    displayName: 'Create work item'
+    displayName: "Create work item"
     enabled: true
     inputs:
       #teamProject: # Optional
-      workItemType: 'Product Backlog Item'
-      title: 'Review Megalinter failures for $(project_repo) repository'
+      workItemType: "Product Backlog Item"
+      title: "Review Megalinter failures for $(project_repo) repository"
       #assignedTo: # Optional
       #areaPath: # Optional
       #iterationPath: # Optional
       fieldMappings: "Description=Please review the attached files and linked build" # Optional; Required if your process defines additional required work item fields
       associate: true # Optional
-      associationType: 'foundinbuild' # Optional; Valid values: build, integratedInBuild, foundInBuild
+      associationType: "foundinbuild" # Optional; Valid values: build, integratedInBuild, foundInBuild
       # ===== Linking Inputs =====
       #linkWorkItems: false # Optional
       #linkType: # Required if linkWorkItems = true
@@ -39,7 +39,7 @@ steps:
       # ===== Attachments Inputs =====
       addAttachments: true # Optional
       attachmentsFolder: "$(System.DefaultWorkingDirectory)/Report/" # Optional
-      attachments: '*.*' # Required if addAttachments = true
+      attachments: "*.*" # Required if addAttachments = true
       # ===== Duplicate Inputs =====
       #preventDuplicates: false # Optional
       #keyFields: # Required if preventDuplicates = true
@@ -69,7 +69,6 @@ steps:
     inputs:
       targetType: 'inline'
       script: |
-        cd $(System.DefaultWorkingDirectory)/megalinter-reports
         $files = dir -R --all
         ForEach($file in $files)
         {
@@ -82,11 +81,12 @@ steps:
               Write-output $file.FullName "does not need moving"
           }      
         }
+        Copy-Item -Path $(System.DefaultWorkingDirectory)/megalinter-reports/megalinter-report.sarif -Destination $(System.DefaultWorkingDirectory)/megalinter-reports/sarif -Force
       showWarnings: true
       pwsh: true
       workingDirectory: '$(System.DefaultWorkingDirectory)'
 
- #publish Megalinter Scan
+  #publish Megalinter Scan
   - task: PublishBuildArtifacts@1
     condition: succeededOrFailed()
     displayName: "Publish Megalinter Scan"
@@ -373,4 +373,3 @@ steps:
     enabled: true
     name: "Remove_terraform_Quality_Check_Docker_Images"
     workingDirectory: "$(System.DefaultWorkingDirectory)"
-    
