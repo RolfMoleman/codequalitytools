@@ -2,7 +2,6 @@
 ## Depenabot automated dependency updater
 ##
 
-
 # Source Documentation
 # https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot
 # https://sanderh.dev/Dependabot-Azure-DevOps/
@@ -74,7 +73,6 @@ jobs:
           mergeStrategy: '1'
           azureDevOpsAccessToken: '$(System.AccessToken)'
           dockerImageRepository: 'tingle/dependabot-azure-devops'
-          dockerImageTag: 'latest'
           extraEnvironmentVariables: 'PULL_REQUESTS_ASSIGNEE=''$(PULL_REQUESTS_ASSIGNEE)'''
 
 #      # Get the repo
