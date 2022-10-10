@@ -123,3 +123,4 @@ updates:
   labels: ["dependabot","terraform"]
   open-pull-requests-limit: 0
   target-branch: "main" 
+  
