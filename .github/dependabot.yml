@@ -30,7 +30,7 @@ updates:
 
 - package-ecosystem: "docker"
   dependency-type: "all"
-  directory: "/"
+  directory: "\"
   schedule:
     interval: "weekly"
     day: "wednesday"
@@ -42,7 +42,7 @@ updates:
 
 - package-ecosystem: "gitsubmodule"
   dependency-type: "all"
-  directory: "/"
+  directory: "\"
   schedule:
     interval: "weekly"
     day: "wednesday"
@@ -54,7 +54,7 @@ updates:
 
 - package-ecosystem: "gradle"
   dependency-type: "all"
-  directory: "/"
+  directory: "\"
   schedule:
     interval: "weekly"
     day: "wednesday"
@@ -66,7 +66,7 @@ updates:
 
 - package-ecosystem: "maven"
   dependency-type: "all"
-  directory: /
+  directory: "\"
   schedule:
     interval: "weekly" 
     day: "wednesday"
@@ -78,7 +78,7 @@ updates:
 
 - package-ecosystem: "npm"
   dependency-type: "all"
-  directory: "/"
+  directory: "\"
   schedule:
     interval: "weekly"
     day: "wednesday"
@@ -90,7 +90,7 @@ updates:
 
 - package-ecosystem: "nuget"
   dependency-type: "all"
-  directory: "/"
+  directory: "\"
   schedule:
     interval: "weekly"
     day: "wednesday"
@@ -102,7 +102,7 @@ updates:
 
 - package-ecosystem: "pip"
   dependency-type: "all"
-  directory: "/"
+  directory: "\"
   schedule:
     interval: "weekly"
     day: "wednesday"
@@ -114,7 +114,7 @@ updates:
 
 - package-ecosystem: "terraform"
   dependency-type: "all"
-  directory: "/"
+  directory: "\"
   schedule:
     interval: "weekly"
     day: "wednesday"
