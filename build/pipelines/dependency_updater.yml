@@ -70,14 +70,12 @@ jobs:
         name: "run_dependabot"
         inputs:
           useConfigFile: true
-          forwardHostSshSocket: true
           setAutoComplete: true
           mergeStrategy: '1'
           azureDevOpsAccessToken: '$(System.AccessToken)'
           dockerImageRepository: 'tingle/dependabot-azure-devops'
           dockerImageTag: 'latest'
-          extraEnvironmentVariables: PULL_REQUESTS_ASSIGNEE='$(PULL_REQUESTS_ASSIGNEE)'
-          openPullRequestsLimit: 100
+          extraEnvironmentVariables: 'PULL_REQUESTS_ASSIGNEE=''$(PULL_REQUESTS_ASSIGNEE)'''
 
 #      # Get the repo
 #      - script: git clone https://github.com/dependabot/dependabot-script.git
