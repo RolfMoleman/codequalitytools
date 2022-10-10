@@ -1,3 +1,470 @@
 ##
 ## Maven specific Megalinter pipeline
 ##
+
+## pipeline name: repo_template - Megalinter ##
+name: $(Date:yy)-$(Date:MM)-$(Date:dd).$(Rev:r)
+pool:
+    vmImage: "ubuntu-latest"
+pr:
+  branches:
+    include:
+      - "*"
+  paths:
+    include:
+      - "*"
+trigger:
+  branches:
+    exclude:
+      - '*'
+    include:
+    - "main"
+    - "bug/*"
+    - "feature/*"
+  paths:
+    include:
+    - "*"
+schedules:
+- cron: "0 0 * * *"
+  displayName: Daily Megalinter run
+  batch: false
+  # run even when there are no code changes
+  always: true
+  # run only on these branches
+  branches:
+    include:
+      - "*"
+jobs:      
+- job: MegaLinter
+  timeoutInMinutes: 0
+  displayName: 'Run OX Security Megalinter'
+  pool:
+    vmImage: "ubuntu-latest"
+  variables:
+          - name: system.debug
+            value: true
+          - name: agent.diagnostic
+            value: true
+          - template: /repo_template/build/pipelines/iac_templates/variables.yml
+            parameters:
+              environmentTag: "dev"
+  steps:
+      #checkout
+      - checkout: 'self'
+      #- checkout: 'repo_template'
+      
+      - task: Maven@3
+        condition: succeededorfailed()
+        displayName: 'Maven package'
+        enabled: true
+        inputs:
+          mavenPomFile: '$(projectDir)/pom.xml'
+          options: '--batch-mode -s $(pipelinesCommonDir)/maven/settings-devops.xml -Ddocker.skip=true'
+          publishJUnitResults: true
+          testResultsFiles: '**/surefire-reports/TEST-*.xml'
+          javaHomeOption: 'JDKVersion'
+          jdkVersionOption: '$(jdkVersion)'
+          mavenVersionOption: 'Default'
+          mavenAuthenticateFeed: true
+          effectivePomSkip: false
+          sonarQubeRunAnalysis: false
+        env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+      # Pull MegaLinter docker image
+      - script: "docker pull oxsecurity/megalinter:latest"
+        condition: succeededOrFailed()
+        displayName: "Pull MegaLinter docker image"
+        enabled: true
+        name: "megalinter_pull"
+      
+      # Run MegaLinter
+      - script: |
+          docker run \
+          --volume $(pwd):/tmp/lint \
+          --env AZURE_COMMENT_REPORTER='true' \
+          --env GIT_AUTHORIZATION_BEARER=$(System.AccessToken) \
+          --env CI=true \
+          --env TF_BUILD=true \
+          --env SYSTEM_ACCESSTOKEN=$(System.AccessToken) \
+          --env SYSTEM_COLLECTIONURI=$(System.CollectionUri) \
+          --env SYSTEM_PULLREQUEST_PULLREQUESTID=$(System.PullRequest.PullRequestId) \
+          --env SYSTEM_TEAMPROJECT=$(System.TeamProject) \
+          --env BUILD_BUILD_ID=$(Build.BuildId) \
+          --env BUILD_REPOSITORY_ID=$(Build.Repository.ID) \
+          --env MEGALINTER_CONFIG='/repo_template/config/.mega-linter.yml' \
+          oxsecurity/megalinter:latest
+        condition: and(succeededOrFailed(),eq(variables['Build.Reason'], 'PullRequest'))
+        displayName: "Run MegaLinter docker image"
+        enabled: true
+        name: "megalinter_docker_pr"
+        workingDirectory: "$(System.DefaultWorkingDirectory)"
+
+      - script: |
+          docker run \
+          --volume $(pwd):/tmp/lint \
+          --env AZURE_COMMENT_REPORTER='true' \
+          --env GIT_AUTHORIZATION_BEARER=$(System.AccessToken) \
+          --env CI=true \
+          --env TF_BUILD=true \
+          --env SYSTEM_ACCESSTOKEN=$(System.AccessToken) \
+          --env SYSTEM_COLLECTIONURI=$(System.CollectionUri) \
+          --env SYSTEM_TEAMPROJECT=$(System.TeamProject) \
+          --env BUILD_BUILD_ID=$(Build.BuildId) \
+          --env BUILD_REPOSITORY_ID=$(Build.Repository.ID) \
+          --env MEGALINTER_CONFIG='/repo_template/config/.mega-linter.yml' \
+          oxsecurity/megalinter:latest
+        condition: and(succeededOrFailed(),ne(variables['Build.Reason'], 'PullRequest'))
+        displayName: "Run MegaLinter docker image"
+        enabled: true
+        name: "megalinter_docker"
+        workingDirectory: "$(System.DefaultWorkingDirectory)"
+
+      - script: |
+          sudo chmod -R a+w megalinter-reports
+        condition: succeededOrFailed()
+        displayName: "change permissions on megalinter-reports directories"
+        enabled: true
+        name: "report_permissions"
+        workingDirectory: "$(System.DefaultWorkingDirectory)"
+
+      # Upload MegaLinter reports
+      - task: PublishPipelineArtifact@1
+        condition: succeededOrFailed()
+        displayName: "Upload MegaLinter reports"
+        inputs:
+          targetPath: "$(System.DefaultWorkingDirectory)/megalinter-reports/"
+          artifactName: MegaLinterReport-$(environment_tag)
+      
+      # Upload MegaLinter updated sources
+      - task: PublishPipelineArtifact@1
+        condition: succeededOrFailed()
+        displayName: "Upload MegaLinter updated sources"
+        inputs:
+          targetPath: "$(System.DefaultWorkingDirectory)/megalinter-reports/updated_sources/"
+          artifactName: MegaLinterUpdatedSources-$(environment_tag)
+
+        #copy sarif files to sarif directory to avoid polluting CodeAnalysisLogs
+      - task: Powershell@2
+        condition: succeededOrFailed()
+        displayName: "Copy Sarif Files"
+        enabled: true
+        inputs:
+          targetType: 'inline'
+          script: |
+            $files = dir -R --all
+            ForEach($file in $files)
+            {
+              if($file.extension.Contains("sarif"))
+              {
+                  Copy-Item -Path $file.FullName -Destination $(System.DefaultWorkingDirectory)/megalinter-reports/sarif -Force
+              }
+              else
+              {
+                  Write-output $file.FullName "does not need moving"
+              }      
+            }
+          showWarnings: true
+          pwsh: true
+          workingDirectory: '$(System.DefaultWorkingDirectory)'
+      
+      - task: Powershell@2
+        condition: succeededOrFailed()
+        displayName: "Copy megalinter-report.sarif"
+        enabled: true
+        inputs:
+          targetType: 'inline'
+          script: |
+                  Copy-Item -Path $(System.DefaultWorkingDirectory)/megalinter-reports/megalinter-report.sarif -Destination $(System.DefaultWorkingDirectory)/megalinter-reports/sarif -Force
+          showWarnings: true
+          pwsh: true
+          workingDirectory: '$(System.DefaultWorkingDirectory)'
+
+      #publish Megalinter Scan
+      - task: PublishBuildArtifacts@1
+        condition: succeededOrFailed()
+        displayName: "Publish Megalinter Scan"
+        enabled: true
+        name: "Publish_megalinter_scan"
+        inputs:
+          PathtoPublish: "$(System.DefaultWorkingDirectory)/megalinter-reports/sarif"
+          ArtifactName: "CodeAnalysisLogs"
+          publishLocation: "container"
+
+      - script: |
+          npm install -g tap-junit
+          mkdir megalinter-reports_converted/
+          cd ./megalinter-reports/tap
+          for report in *; do
+          ReportName=$(echo $report | sed -n "s/mega-linter-\s*\(\S*\).tap$/\1/p")
+          # workaround for https://github.com/dhershman1/tap-junit/issues/30#issuecomment-744462006
+            'sed -i "s/message: \*\+/message: /g" $report'
+          # Some message got comments with # which are ignored by tap-junit, so we escape it
+            'sed -i -E "s/(^|[ ]+)(#)[a-zA-Z]*/\1\/\//g" $report'
+          ## Converting TAP files into xml files with JUnit5 format
+          #  cat $report | tap-junit -p -s "mega-linter" > ../../megalinter-reports_converted/${report}.xml
+          #Carls method
+            cat $report | tap-junit --pretty --suite $ReportName --input ${report} > $(System.DefaultWorkingDirectory)/megalinter-reports_converted/${ReportName}.xml
+          # Remove escaping on newlines for readability
+            sed -i 's/\\n/\n/g' $(System.DefaultWorkingDirectory)/megalinter-reports_converted/${report}.xml
+          # Replace ANSI colors as they are illegal characters
+            sed -i 's/\x1b\[[0-9;]*m//g' $(System.DefaultWorkingDirectory)/megalinter-reports_converted/${report}.xml
+          done
+        condition: succeededOrFailed()
+        displayName: "Convert tap reports to junit"
+        enabled: true
+        name: "Convert_tap_reports_to_junit"
+        workingDirectory: "$(System.DefaultWorkingDirectory)"
+
+      - script: |
+          cd ./megalinter-reports_converted
+          ls -la
+          echo "Appending environment to file name"
+          ls -a 
+          for f in *;do mv -v "$f" "${f%.*}-$(environment_tag).${f##*.}";done
+          ls -la
+        condition: succeededOrFailed()
+        displayName: "Rename Reports"
+        enabled: true
+        name: "rename_reports"
+        workingDirectory: "$(System.DefaultWorkingDirectory)"
+
+      - task: PublishBuildArtifacts@1
+        condition: succeededOrFailed()
+        displayName: "Publish renamed MegaLinter Reports"
+        enabled: true
+        name: "Publish_renamed_MegaLinter_Reports"
+        inputs:
+          PathtoPublish: "$(System.DefaultWorkingDirectory)/megalinter-reports_converted/"
+          ArtifactName: "MegaLinter JUnit-Reports-$(environment_tag)"
+
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        displayName: "Publish MegaLinter - ARM_TTK Results"
+        enabled: true
+        inputs:
+          testResultsFormat: "JUnit"
+          testResultsFiles: "ARM_ARM_TTK-$(environment_tag).xml"
+          searchFolder: "$(System.DefaultWorkingDirectory)/megalinter-reports_converted/"
+          testRunTitle: "MegaLinter - ARM"
+          mergeTestResults: false
+          failTaskOnFailedTests: false
+          publishRunAttachments: true
+
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        displayName: "Publish MegaLinter - JSON_ESLINT Results"
+        enabled: true
+        inputs:
+          testResultsFormat: "JUnit"
+          testResultsFiles: "JSON_ESLINT_PLUGIN_JSONC-$(environment_tag).xml"
+          searchFolder: "$(System.DefaultWorkingDirectory)/megalinter-reports_converted/"
+          testRunTitle: "MegaLinter - JSON_ESLINT"
+          mergeTestResults: false
+          failTaskOnFailedTests: false
+          publishRunAttachments: true
+
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        displayName: "Publish MegaLinter - JSON_JSONLINT Results"
+        enabled: true
+        inputs:
+          testResultsFormat: "JUnit"
+          testResultsFiles: "JSON_JSONLINT-$(environment_tag).xml"
+          searchFolder: "$(System.DefaultWorkingDirectory)/megalinter-reports_converted/"
+          testRunTitle: "MegaLinter - JSON_JSONLINT"
+          mergeTestResults: false
+          failTaskOnFailedTests: false
+          publishRunAttachments: true
+
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        displayName: "Publish MegaLinter - JSON_PRETTIER Results"
+        enabled: true
+        inputs:
+          testResultsFormat: "JUnit"
+          testResultsFiles: "JSON_PRETTIER-$(environment_tag).xml"
+          searchFolder: "$(System.DefaultWorkingDirectory)/megalinter-reports_converted/"
+          testRunTitle: "MegaLinter - JSON_PRETTIER"
+          mergeTestResults: false
+          failTaskOnFailedTests: false
+          publishRunAttachments: true
+
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        displayName: "Publish MegaLinter - JSON_V8R Results"
+        enabled: true
+        inputs:
+          testResultsFormat: "JUnit"
+          testResultsFiles: "JSON_V8R-$(environment_tag).xml"
+          searchFolder: "$(System.DefaultWorkingDirectory)/megalinter-reports_converted/"
+          testRunTitle: "MegaLinter - JSON_V8R"
+          mergeTestResults: false
+          failTaskOnFailedTests: false
+          publishRunAttachments: true
+
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        displayName: "Publish MegaLinter - MARKDOWN_LINK_CHECK Results"
+        enabled: true
+        inputs:
+          testResultsFormat: "JUnit"
+          testResultsFiles: "MARKDOWN_MARKDOWN_LINK_CHECK-$(environment_tag).xml"
+          searchFolder: "$(System.DefaultWorkingDirectory)/megalinter-reports_converted/"
+          testRunTitle: "MegaLinter - MARKDOWN_LINK_CHECK"
+          mergeTestResults: false
+          failTaskOnFailedTests: false
+          publishRunAttachments: true
+
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        displayName: "Publish MegaLinter - MARKDOWN_TABLE_FORMATTER Results"
+        enabled: true
+        inputs:
+          testResultsFormat: "JUnit"
+          testResultsFiles: "MARKDOWN_MARKDOWN_TABLE_FORMATTER-$(environment_tag).xml"
+          searchFolder: "$(System.DefaultWorkingDirectory)/megalinter-reports_converted/"
+          testRunTitle: "MegaLinter - MARKDOWN_TABLE_FORMATTER"
+          mergeTestResults: false
+          failTaskOnFailedTests: false
+          publishRunAttachments: true
+
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        displayName: "Publish MegaLinter - MARKDOWNLINT Results"
+        enabled: true
+        inputs:
+          testResultsFormat: "JUnit"
+          testResultsFiles: "MARKDOWN_MARKDOWNLINT-$(environment_tag).xml"
+          searchFolder: "$(System.DefaultWorkingDirectory)/megalinter-reports_converted/"
+          testRunTitle: "MegaLinter - MARKDOWNLINT"
+          mergeTestResults: false
+          failTaskOnFailedTests: false
+          publishRunAttachments: true
+
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        displayName: "Publish MegaLinter - CSPELL Results"
+        enabled: true
+        inputs:
+          testResultsFormat: "JUnit"
+          testResultsFiles: "SPELL_CSPELL-$(environment_tag).xml"
+          searchFolder: "$(System.DefaultWorkingDirectory)/megalinter-reports_converted/"
+          testRunTitle: "MegaLinter - CSPELL"
+          mergeTestResults: false
+          failTaskOnFailedTests: false
+          publishRunAttachments: true
+
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        displayName: "Publish MegaLinter - MISSPELL Results"
+        enabled: true
+        inputs:
+          testResultsFormat: "JUnit"
+          testResultsFiles: "SPELL_MISSPELL-$(environment_tag).xml"
+          searchFolder: "$(System.DefaultWorkingDirectory)/megalinter-reports_converted/"
+          testRunTitle: "MegaLinter - MISSPELL"
+          mergeTestResults: false
+          failTaskOnFailedTests: false
+          publishRunAttachments: true
+
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        displayName: "Publish MegaLinter - CHECKOV Results"
+        enabled: true
+        inputs:
+          testResultsFormat: "JUnit"
+          testResultsFiles: "terraform_CHECKOV-$(environment_tag).xml"
+          searchFolder: "$(System.DefaultWorkingDirectory)/megalinter-reports_converted/"
+          testRunTitle: "MegaLinter - CHECKOV"
+          mergeTestResults: false
+          failTaskOnFailedTests: false
+          publishRunAttachments: true
+
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        displayName: "Publish MegaLinter - KICS Results"
+        enabled: true
+        inputs:
+          testResultsFormat: "JUnit"
+          testResultsFiles: "terraform_KICS-$(environment_tag).xml"
+          searchFolder: "$(System.DefaultWorkingDirectory)/megalinter-reports_converted/"
+          testRunTitle: "MegaLinter - KICS"
+          mergeTestResults: false
+          failTaskOnFailedTests: false
+          publishRunAttachments: true
+
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        displayName: "Publish MegaLinter - terraform_FMT Results"
+        enabled: true
+        inputs:
+          testResultsFormat: "JUnit"
+          testResultsFiles: "terraform_terraform_FMT-$(environment_tag).xml"
+          searchFolder: "$(System.DefaultWorkingDirectory)/megalinter-reports_converted/"
+          testRunTitle: "MegaLinter - terraform_FMT"
+          mergeTestResults: false
+          failTaskOnFailedTests: false
+          publishRunAttachments: true
+
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        displayName: "Publish MegaLinter - TFLINT Results"
+        enabled: true
+        inputs:
+          testResultsFormat: "JUnit"
+          testResultsFiles: "terraform_TFLINT-$(environment_tag).xml"
+          searchFolder: "$(System.DefaultWorkingDirectory)/megalinter-reports_converted/"
+          testRunTitle: "MegaLinter - TFLINT"
+          mergeTestResults: false
+          failTaskOnFailedTests: false
+          publishRunAttachments: true
+
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        displayName: "Publish MegaLinter - YAML_PRETTIER Results"
+        enabled: true
+        inputs:
+          testResultsFormat: "JUnit"
+          testResultsFiles: "YAML_PRETTIER-$(environment_tag).xml"
+          searchFolder: "$(System.DefaultWorkingDirectory)/megalinter-reports_converted/"
+          testRunTitle: "MegaLinter - YAML_PRETTIER"
+          mergeTestResults: false
+          failTaskOnFailedTests: false
+          publishRunAttachments: true
+
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        displayName: "Publish MegaLinter - YAML_V8R Results"
+        enabled: true
+        inputs:
+          testResultsFormat: "JUnit"
+          testResultsFiles: "YAML_V8R-$(environment_tag).xml"
+          searchFolder: "$(System.DefaultWorkingDirectory)/megalinter-reports_converted/"
+          testRunTitle: "MegaLinter - YAML_V8R"
+          mergeTestResults: false
+          failTaskOnFailedTests: false
+          publishRunAttachments: true
+
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        displayName: "Publish MegaLinter - YAMLLINT Results"
+        enabled: true
+        inputs:
+          testResultsFormat: "JUnit"
+          testResultsFiles: "YAML_YAMLLINT-$(environment_tag).xml"
+          searchFolder: "$(System.DefaultWorkingDirectory)/megalinter-reports_converted/"
+          testRunTitle: "MegaLinter - YAMLLINT"
+          mergeTestResults: false
+          failTaskOnFailedTests: false
+          publishRunAttachments: true
+
+      # Clean up any of the containers / images that were used for quality checks
+      - script: |
+          docker rmi "oxsecurity/megalinter:latest" -f | true
+        condition: succeededOrFailed()
+        displayName: "Remove terraform Quality Check Docker Images"
+        enabled: true
+        name: "Remove_terraform_Quality_Check_Docker_Images"
+        workingDirectory: "$(System.DefaultWorkingDirectory)"
+    

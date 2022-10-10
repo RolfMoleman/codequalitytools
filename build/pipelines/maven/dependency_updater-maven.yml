@@ -39,7 +39,7 @@ jobs:
     - name: DIRECTORY_PATH
       value: /
     - name: PACKAGE_MANAGER
-      value: terraform
+      value: maven
     # On Azure DevOps this should be the: <Org>/<Project>/_git/<Repo_Name>
     - name: PROJECT_PATH
       value: bcagroup/BCA.Operations.Utilities/_git/repo_template
@@ -97,3 +97,4 @@ jobs:
         displayName: "Run Dependabot"
         enabled: true
         name: "run_dependabot"
+        

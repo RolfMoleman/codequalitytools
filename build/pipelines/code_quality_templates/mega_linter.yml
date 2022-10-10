@@ -1,14 +1,46 @@
 steps:
+    # Run MegaLinter
   - script: |
-
       docker pull oxsecurity/megalinter:latest
       docker run \
+      --volume $(pwd):/tmp/lint \
+      --env AZURE_COMMENT_REPORTER='true' \
+      --env GIT_AUTHORIZATION_BEARER=$(System.AccessToken) \
+      --env CI=true \
+      --env TF_BUILD=true \
+      --env SYSTEM_ACCESSTOKEN=$(System.AccessToken) \
+      --env SYSTEM_COLLECTIONURI=$(System.CollectionUri) \
+      --env SYSTEM_PULLREQUEST_PULLREQUESTID=$(System.PullRequest.PullRequestId) \
+      --env SYSTEM_TEAMPROJECT=$(System.TeamProject) \
+      --env BUILD_BUILD_ID=$(Build.BuildId) \
+      --env BUILD_REPOSITORY_ID=$(Build.Repository.ID) \
       --env MEGALINTER_CONFIG='/repo_template/config/.mega-linter.yml' \
-      --volume $(pwd):/tmp/lint oxsecurity/megalinter:latest
-    condition: succeededOrFailed()
-    displayName: "Code Scan using Mega-Linter"
+      oxsecurity/megalinter:latest
+    condition: and(succeededOrFailed(),eq(variables['Build.Reason'], 'PullRequest'))
+    displayName: "Run MegaLinter docker image"
     enabled: true
-    name: "Code_Scan_using_MegaLinter"
+    name: "megalinter_docker_pr"
+    workingDirectory: "$(System.DefaultWorkingDirectory)"
+
+  - script: |
+      docker pull oxsecurity/megalinter:latest
+      docker run \
+      --volume $(pwd):/tmp/lint \
+      --env AZURE_COMMENT_REPORTER='true' \
+      --env GIT_AUTHORIZATION_BEARER=$(System.AccessToken) \
+      --env CI=true \
+      --env TF_BUILD=true \
+      --env SYSTEM_ACCESSTOKEN=$(System.AccessToken) \
+      --env SYSTEM_COLLECTIONURI=$(System.CollectionUri) \
+      --env SYSTEM_TEAMPROJECT=$(System.TeamProject) \
+      --env BUILD_BUILD_ID=$(Build.BuildId) \
+      --env BUILD_REPOSITORY_ID=$(Build.Repository.ID) \
+      --env MEGALINTER_CONFIG='/repo_template/config/.mega-linter.yml' \
+      oxsecurity/megalinter:latest
+    condition: and(succeededOrFailed(),ne(variables['Build.Reason'], 'PullRequest'))
+    displayName: "Run MegaLinter docker image"
+    enabled: true
+    name: "megalinter_docker"
     workingDirectory: "$(System.DefaultWorkingDirectory)"
 
   # Create work items to review failures
@@ -38,7 +70,7 @@ steps:
       #commitsAndChangesets: # Required if linkCode = true
       # ===== Attachments Inputs =====
       addAttachments: true # Optional
-      attachmentsFolder: "$(System.DefaultWorkingDirectory)/Report/" # Optional
+      attachmentsFolder: "$(System.DefaultWorkingDirectory)/megalinter-reports/" # Optional
       attachments: "*.*" # Required if addAttachments = true
       # ===== Duplicate Inputs =====
       #preventDuplicates: false # Optional
@@ -52,6 +84,14 @@ steps:
       #authToken: #Optional
       #allowRedirectDowngrade: false # Optional
 
+  - script: |
+      sudo chmod -R a+w megalinter-reports
+    condition: succeededOrFailed()
+    displayName: "change permissions on megalinter-reports directories"
+    enabled: true
+    name: "report_permissions"
+    workingDirectory: "$(System.DefaultWorkingDirectory)"
+
   - task: PublishBuildArtifacts@1
     condition: succeededOrFailed()
     displayName: "Publish MegaLinter Report"
@@ -60,6 +100,14 @@ steps:
     inputs:
       PathtoPublish: "$(System.DefaultWorkingDirectory)/megalinter-reports/"
       ArtifactName: MegaLinterReport-$(environment_tag)
+
+    # Upload MegaLinter updated sources
+  - task: PublishPipelineArtifact@1
+    condition: succeededOrFailed()
+    displayName: "Upload MegaLinter updated sources"
+    inputs:
+      targetPath: "$(System.DefaultWorkingDirectory)/megalinter-reports/updated_sources/"
+      artifactName: MegaLinterUpdatedSources-$(environment_tag)
 
   #copy sarif files to sarif directory to avoid polluting CodeAnalysisLogs
   - task: Powershell@2
