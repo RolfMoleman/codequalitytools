@@ -1,0 +1,21 @@
+###
+### Maven build steps. please replace the options as required for your project
+###
+steps:
+  - task: Maven@3
+    condition: succeededorfailed()
+    displayName: 'Maven package'
+    enabled: true
+    inputs:
+      mavenPomFile: '$(projectDir)/pom.xml'
+      options: '--batch-mode -s $(pipelinesCommonDir)/maven/settings-devops.xml -Ddocker.skip=true'
+      publishJUnitResults: true
+      testResultsFiles: '**/surefire-reports/TEST-*.xml'
+      javaHomeOption: 'JDKVersion'
+      jdkVersionOption: '$(jdkVersion)'
+      mavenVersionOption: 'Default'
+      mavenAuthenticateFeed: true
+      effectivePomSkip: false
+      sonarQubeRunAnalysis: false
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
