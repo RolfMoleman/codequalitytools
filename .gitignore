@@ -339,7 +339,7 @@ _TeamCity*
 
 ### Local .terraform directories
 
-**/.terraform/*
+#**/.terraform/*
 
 ### .tfstate files
 
@@ -349,7 +349,7 @@ _TeamCity*
 
 ### Terraform lock file
 
-**/.terraform.lock.hcl
+#**/.terraform.lock.hcl
 
 ### .tfvars files
 
