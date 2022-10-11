@@ -335,7 +335,7 @@ _TeamCity*
 
 ### Block Terraform HCL Lock Files
 
-**/.terraform.lock.hcl
+#**/.terraform.lock.hcl
 
 ### Local .terraform directories
 
