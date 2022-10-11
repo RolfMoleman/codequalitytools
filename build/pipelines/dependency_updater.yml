@@ -145,4 +145,3 @@ jobs:
         inputs: 
           filePath: 'build\scripts\dependabot-devops.sh'
         name: "run_dependabot"
-        workingDirectory: "$(System.DefaultWorkingDirectory)"
