@@ -10,7 +10,8 @@ updates:
 
  #
  # repo template stuff
- # 
+ #
+ 
   - package-ecosystem: "terraform"
     directory: "./build/terraform"
     schedule:
@@ -30,22 +31,11 @@ updates:
     open-pull-requests-limit: 100
     target-branch: "main"
     versioning-strategy: "auto"
+
 #
 # your stuff
 #
 
-  - package-ecosystem: "beta-ecosystem"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "wednesday"
-      time: "01:00"
-      timezone: "Europe/London"
-    labels: ["dependabot","docker"]
-    open-pull-requests-limit: 0
-    target-branch: "main"
-    versioning-strategy: "auto"
-    
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
