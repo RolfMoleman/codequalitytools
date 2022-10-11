@@ -32,7 +32,7 @@ updates:
   dependency-type: "all"
   directory: "/"
   schedule:
-    interval: "Weekly"
+    interval: "weekly"
     day: "wednesday"
     time: "01:00"
     timezone: "Europe/London"
