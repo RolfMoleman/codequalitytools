@@ -53,10 +53,10 @@ done
 
 echo "---[ Preparing for Terraform dependabot run ]---"
 
-FILECOUNT="$(find . -name .terraform.lock.hcl | wc -l)"
+FILECOUNT="$(find . -name ptroviders.tf | wc -l)"
 echo "Found $FILECOUNT dependency file(s)."
 
-find . -name .terraform.lock.hcl | while read path; do
+find . -name providers.tf | while read path; do
 PARENTNAME="$(basename "$(dirname "$path")")"
 DIRECTORY_PATH="/"$PARENTNAME
 echo "directory: $DIRECTORY_PATH"
