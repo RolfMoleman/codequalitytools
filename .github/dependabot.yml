@@ -11,7 +11,7 @@ updates:
  #
  # repo template stuff
  #
- 
+
   - package-ecosystem: "terraform"
     directory: "./build/terraform"
     schedule:
@@ -20,7 +20,6 @@ updates:
       timezone: "Europe/London"
     open-pull-requests-limit: 100  
     target-branch: "main"
-    versioning-strategy: "auto"
 
   - package-ecosystem: "terraform"
     directory: "./build/terraform_local"
@@ -30,7 +29,6 @@ updates:
       timezone: "Europe/London"
     open-pull-requests-limit: 100
     target-branch: "main"
-    versioning-strategy: "auto"
 
 #
 # your stuff
@@ -46,7 +44,6 @@ updates:
     labels: ["dependabot","docker"]
     open-pull-requests-limit: 0
     target-branch: "main"
-    versioning-strategy: "auto"
 
   - package-ecosystem: "gitsubmodule"
     directory: "/"
@@ -58,7 +55,6 @@ updates:
     labels: ["dependabot","gitsubmodule"]
     open-pull-requests-limit: 0
     target-branch: "main"
-    versioning-strategy: "auto"
 
   - package-ecosystem: "gradle"
     directory: "/"
@@ -70,7 +66,6 @@ updates:
     labels: ["dependabot","gradle"]
     open-pull-requests-limit: 0
     target-branch: "main"
-    versioning-strategy: "auto"
 
   - package-ecosystem: "maven"
     directory: "/"
@@ -82,7 +77,6 @@ updates:
     labels: ["dependabot","maven"]
     open-pull-requests-limit: 100
     target-branch: "main"
-    versioning-strategy: "auto"
 
   - package-ecosystem: "npm"
     directory: "/"
@@ -94,7 +88,6 @@ updates:
     labels: ["dependabot","npm"]
     open-pull-requests-limit: 0
     target-branch: "main"
-    versioning-strategy: "auto"
 
   - package-ecosystem: "nuget"
     directory: "/"
@@ -106,7 +99,6 @@ updates:
     labels: ["dependabot","nuget"]
     open-pull-requests-limit: 0
     target-branch: "main"
-    versioning-strategy: "auto"
 
   - package-ecosystem: "pip"
     directory: "/"
@@ -118,7 +110,6 @@ updates:
     labels: ["dependabot","pip"]
     open-pull-requests-limit: 0
     target-branch: "main"
-    versioning-strategy: "auto"
 
   - package-ecosystem: "terraform"
     directory: "/"
@@ -130,4 +121,3 @@ updates:
     labels: ["dependabot","terraform"]
     open-pull-requests-limit: 0
     target-branch: "main"
-    versioning-strategy: "auto"
