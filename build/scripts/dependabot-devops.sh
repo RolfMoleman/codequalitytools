@@ -1,5 +1,19 @@
 #!/bin/bash
-SYSTEM_COLLECTIONURI_TRIM=`echo "${SYSTEM_COLLECTIONURI:22}"`
+## below variables donet work whilst we have the old Azure DevOps url
+#SYSTEM_COLLECTIONURI_TRIM=`echo "${SYSTEM_COLLECTIONURI:22}"`
+#PROJECT_PATH="$SYSTEM_COLLECTIONURI_TRIM$SYSTEM_TEAMPROJECT/_git/$BUILD_REPOSITORY_NAME"
+## old Visula studio permitting variables
+
+if [[ "$SYSTEM_COLLECTIONURI" == *"dev.azure.com"* ]]; then
+  echo "Using new URL"
+  SYSTEM_COLLECTIONURI_TRIM=`echo "${SYSTEM_COLLECTIONURI:22}"`
+elif [[ "$SYSTEM_COLLECTIONURI" == *"visualstudio.com"* ]]; then
+  echo "Using OLD URL"
+  SYSTEM_COLLECTIONURI_TRIM=`echo $SYSTEM_COLLECTIONURI | grep -oP '(?<=//).*(?=.visualstudio.com)'`
+  SYSTEM_COLLECTIONURI_TRIM+=/
+fi
+
+
 PROJECT_PATH="$SYSTEM_COLLECTIONURI_TRIM$SYSTEM_TEAMPROJECT/_git/$BUILD_REPOSITORY_NAME"
 echo "org: $SYSTEM_COLLECTIONURI_TRIM"
 echo "project: $SYSTEM_TEAMPROJECT"
