@@ -1,8 +1,34 @@
 steps:
   # install terrascan docker image, run scan and generate report in human,junit and sarif formats
+
+  - task: Cache@2
+    inputs:
+      key: docker | "tenable/terrascan:latest"
+      path: $(Pipeline.Workspace)/docker
+      cacheHitVar: DOCKER_CACHE_HIT
+    condition: succeededOrFailed()
+    displayName: Cache Docker images
+    enabled: true
+    name: "cache_docker"
+
+  - script: |
+              docker load -i $(Pipeline.Workspace)/docker/cache.tar
+    condition: and(not(canceled()), eq(variables.DOCKER_CACHE_HIT, 'true'))
+    displayName: Restore Docker image
+    enabled: true
+    name: "load_dockercache"
+
+  - script: |
+      mkdir -p $(Pipeline.Workspace)/docker
+      docker pull -q tenable/terrascan:latest
+      docker save -o $(Pipeline.Workspace)/docker/cache.tar tenable/terrascan:latest
+    condition: and(not(canceled()), or(failed(), ne(variables.DOCKER_CACHE_HIT, 'true')))
+    displayName: Save Docker image
+    enabled: true
+    name: "save_dockerimage"  
+
   - script: |
       mkdir terrascanreports
-      docker pull tenable/terrascan:latest
       outputTypes=("human" "json" "junit-xml" "sarif" "yaml")
 
       for str in ${outputTypes[@]}; do

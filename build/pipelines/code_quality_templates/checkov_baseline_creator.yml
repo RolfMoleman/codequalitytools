@@ -3,9 +3,36 @@ steps:
   # It scans cloud infrastructure provisioned using terraform, Cloudformation, Kubernetes, Serverless and ARM Templates and detects security and compliance misconfigurations.
   # Documentation: https://github.com/bridgecrewio/checkov
   # NOTE: If you want to skip a specific check from the analysis, include it in the command-line as follows: --skip-check CKV_AWS_70,CKV_AWS_52,CKV_AWS_21,CKV_AWS_18,CKV_AWS_19
+
+  - task: Cache@2
+    inputs:
+      key: docker | "bridgecrew/checkov:latest"
+      path: $(Pipeline.Workspace)/docker
+      cacheHitVar: DOCKER_CACHE_HIT
+    condition: succeededOrFailed()
+    displayName: Cache Docker images
+    enabled: true
+    name: "cache_docker"
+
+  - script: |
+              docker load -i $(Pipeline.Workspace)/docker/cache.tar
+    condition: and(not(canceled()), eq(variables.DOCKER_CACHE_HIT, 'true'))
+    displayName: Restore Docker image
+    enabled: true
+    name: "load_dockercache"
+    
+
+  - script: |
+      mkdir -p $(Pipeline.Workspace)/docker
+      docker pull -q bridgecrew/checkov:latest
+      docker save -o $(Pipeline.Workspace)/docker/cache.tar bridgecrew/checkov:latest             
+    condition: and(not(canceled()), or(failed(), ne(variables.DOCKER_CACHE_HIT, 'true')))
+    displayName: Save Docker image
+    enabled: true
+    name: "save_dockerimage"  
+
   - script: |
       mkdir CheckovReports
-      docker pull bridgecrew/checkov:latest
       echo "Output bridgecrew variables"
       echo "System.TeamProject: $(System.TeamProject)"
       echo "--Repo-id: $(project_repo)"
@@ -39,7 +66,6 @@ steps:
 
   - script: |
       mkdir CheckovReports
-      docker pull bridgecrew/checkov:latest
       echo "bridgecrewkey variable is not set so running normal checkov"
       docker run \
       --volume "$(pwd)":/Repo \

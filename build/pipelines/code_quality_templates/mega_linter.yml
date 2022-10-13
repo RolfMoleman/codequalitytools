@@ -1,7 +1,33 @@
 steps:
+  
+  - task: Cache@2
+    inputs:
+      key: docker | "oxsecurity/megalinter:latest"
+      path: $(Pipeline.Workspace)/docker
+      cacheHitVar: DOCKER_CACHE_HIT
+    condition: succeededOrFailed()
+    displayName: Cache Docker images
+    enabled: true
+    name: "cache_docker"
+
+  - script: |
+              docker load -i $(Pipeline.Workspace)/docker/cache.tar
+    condition: and(not(canceled()), eq(variables.DOCKER_CACHE_HIT, 'true'))
+    displayName: Restore Docker image
+    enabled: true
+    name: "load_dockercache"
+    
+
+  - script: |
+      mkdir -p $(Pipeline.Workspace)/docker
+      docker pull -q oxsecurity/megalinter:latest
+      docker save -o $(Pipeline.Workspace)/docker/cache.tar oxsecurity/megalinter:latest              
+    condition: and(not(canceled()), or(failed(), ne(variables.DOCKER_CACHE_HIT, 'true')))
+    displayName: Save Docker image
+    enabled: true
+    name: "save_dockerimage"
     # Run MegaLinter
   - script: |
-      docker pull oxsecurity/megalinter:latest
       docker run \
       --volume $(pwd):/tmp/lint \
       --env AZURE_COMMENT_REPORTER='true' \
@@ -23,7 +49,6 @@ steps:
     workingDirectory: "$(System.DefaultWorkingDirectory)"
 
   - script: |
-      docker pull oxsecurity/megalinter:latest
       docker run \
       --volume $(pwd):/tmp/lint \
       --env AZURE_COMMENT_REPORTER='true' \

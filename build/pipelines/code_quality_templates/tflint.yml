@@ -1,4 +1,31 @@
 steps:
+
+  - task: Cache@2
+    inputs:
+      key: docker | "ghcr.io/terraform-linters/tflint-bundle:latest"
+      path: $(Pipeline.Workspace)/docker
+      cacheHitVar: DOCKER_CACHE_HIT
+    condition: succeededOrFailed()
+    displayName: Cache Docker images
+    enabled: true
+    name: "cache_docker"
+
+  - script: |
+              docker load -i $(Pipeline.Workspace)/docker/cache.tar
+    condition: and(not(canceled()), eq(variables.DOCKER_CACHE_HIT, 'true'))
+    displayName: Restore Docker image
+    enabled: true
+    name: "load_dockercache"
+
+  - script: |
+      mkdir -p $(Pipeline.Workspace)/docker
+      docker pull -q ghcr.io/terraform-linters/tflint-bundle:latest
+      docker save -o $(Pipeline.Workspace)/docker/cache.tar ghcr.io/terraform-linters/tflint-bundle:latest
+    condition: and(not(canceled()), or(failed(), ne(variables.DOCKER_CACHE_HIT, 'true')))
+    displayName: Save Docker image
+    enabled: true
+    name: "save_dockerimage"
+
   # TFLint is a framework that finds possible errors (like illegal instance types) for major cloud providers (AWS/Azure/GCP), warn about deprecated syntax, unused declarations, and enforce best practices, naming conventions.
   - task: qetza.replacetokens.replacetokens-task.replacetokens@5
     condition: succeededOrFailed()
@@ -21,7 +48,6 @@ steps:
       enableTelemetry: true
   - script: |
       mkdir TFLintReport
-      docker pull ghcr.io/terraform-linters/tflint-bundle:latest
       outputTypes=("default" "json" "checkstyle" "junit" "compact" "sarif")
 
             for str in ${outputTypes[@]}; do

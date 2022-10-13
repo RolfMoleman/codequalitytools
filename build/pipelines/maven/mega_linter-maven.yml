@@ -71,12 +71,40 @@ jobs:
         env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
-      # Pull MegaLinter docker image
-      - script: "docker pull oxsecurity/megalinter:latest"
+#      # Pull MegaLinter docker image
+#      - script: "docker pull oxsecurity/megalinter:latest"
+#        condition: succeededOrFailed()
+#        displayName: "Pull MegaLinter docker image"
+#        enabled: true
+#        name: "megalinter_pull"
+      
+      - task: Cache@2
+        inputs:
+          key: docker | "oxsecurity/megalinter:latest"
+          path: $(Pipeline.Workspace)/docker
+          cacheHitVar: DOCKER_CACHE_HIT
         condition: succeededOrFailed()
-        displayName: "Pull MegaLinter docker image"
+        displayName: Cache Docker images
         enabled: true
-        name: "megalinter_pull"
+        name: "cache_docker"
+
+      - script: |
+                  docker load -i $(Pipeline.Workspace)/docker/cache.tar
+        condition: and(not(canceled()), eq(variables.DOCKER_CACHE_HIT, 'true'))
+        displayName: Restore Docker image
+        enabled: true
+        name: "load_dockercache"
+        
+
+      - script: |
+          mkdir -p $(Pipeline.Workspace)/docker
+          docker pull -q oxsecurity/megalinter:latest
+          docker save -o $(Pipeline.Workspace)/docker/cache.tar oxsecurity/megalinter:latest    
+        condition: and(not(canceled()), or(failed(), ne(variables.DOCKER_CACHE_HIT, 'true')))
+        displayName: Save Docker image
+        enabled: true
+        name: "save_dockerimage"
+
       
       # Run MegaLinter
       - script: |

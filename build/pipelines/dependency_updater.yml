@@ -113,14 +113,39 @@ jobs:
 #        name: "run_dependabot"
 #        workingDirectory: "$(System.DefaultWorkingDirectory)"
 
-      # Pull the docker image
-      - script: docker pull dependabot/dependabot-core
-        condition: succeededOrFailed()
-        displayName: "pull dependabot-core Docker image"
-        enabled: true
-        name: "pull_image"
-        workingDirectory: "$(System.DefaultWorkingDirectory)"
+#      # Pull the docker image
+#      - script: docker pull dependabot/dependabot-core
+#        condition: succeededOrFailed()
+#        displayName: "pull dependabot-core Docker image"
+#        enabled: true
+#        name: "pull_image"
+#        workingDirectory: "$(System.DefaultWorkingDirectory)"
 
+      - task: Cache@2
+        inputs:
+          key: docker | "dependabot/dependabot-core:latest"
+          path: $(Pipeline.Workspace)/docker
+          cacheHitVar: DOCKER_CACHE_HIT
+        condition: succeededOrFailed()
+        displayName: Cache Docker images
+        enabled: true
+        name: "cache_docker"
+
+      - script: |
+                  docker load -i $(Pipeline.Workspace)/docker/cache.tar
+        condition: and(not(canceled()), eq(variables.DOCKER_CACHE_HIT, 'true'))
+        displayName: Restore Docker image
+        enabled: true
+        name: "load_dockercache"
+
+      - script: |
+          mkdir -p $(Pipeline.Workspace)/docker
+          docker pull -q dependabot/dependabot-core:latest
+          docker save -o $(Pipeline.Workspace)/docker/cache.tar dependabot/dependabot-core:latest
+        condition: and(not(canceled()), or(failed(), ne(variables.DOCKER_CACHE_HIT, 'true')))
+        displayName: Save Docker image
+        enabled: true
+        name: "save_dockerimage"  
 
       # Pass your vars to the docker image and execute
       - script: |

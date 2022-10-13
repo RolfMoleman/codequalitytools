@@ -2,10 +2,36 @@ steps:
   # TFSec uses static analysis of terraform templates to spot potential security issues, and checks for violations of AWS, Azure and GCP security best practice recommendations.
   # NOTE: To disable a specific check from analysis, include it in the command-line as follows: -e GEN001,GCP001,GCP002
   # Documentation: https://github.com/tfsec/tfsec
+
+  - task: Cache@2
+    inputs:
+      key: docker | "aquasec/tfsec:latest"
+      path: $(Pipeline.Workspace)/docker
+      cacheHitVar: DOCKER_CACHE_HIT
+    condition: succeededOrFailed()
+    displayName: Cache Docker images
+    enabled: true
+    name: "cache_docker"
+
+  - script: |
+              docker load -i $(Pipeline.Workspace)/docker/cache.tar
+    condition: and(not(canceled()), eq(variables.DOCKER_CACHE_HIT, 'true'))
+    displayName: Restore Docker image
+    enabled: true
+    name: "load_dockercache"
+
+  - script: |
+      mkdir -p $(Pipeline.Workspace)/docker
+      docker pull -q aquasec/tfsec:latest
+      docker save -o $(Pipeline.Workspace)/docker/cache.tar aquasec/tfsec:latest
+    condition: and(not(canceled()), or(failed(), ne(variables.DOCKER_CACHE_HIT, 'true')))
+    displayName: Save Docker image
+    enabled: true
+    name: "save_dockerimage"  
+
   - bash: |
       mkdir TFSecReport
       chmod a+w TFSecReport
-      docker pull aquasec/tfsec:latest
       docker run \
       --volume $(pwd):/Repo \
       --volume $(System.DefaultWorkingDirectory)/TFSecReport:/reports \
