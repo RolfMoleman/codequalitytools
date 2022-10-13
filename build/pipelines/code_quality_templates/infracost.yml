@@ -12,6 +12,8 @@ steps:
 
   # Clone the base branch of the Repo (e.g. main/master) into a temp directory.
   - bash: |
+      mkdir tmp
+      chmod a+w tmp
       git clone $(repo_url) --branch=$(repo_main_branch) --single-branch /tmp/base --config http.extraheader="AUTHORIZATION: bearer $(System.AccessToken)"
     condition: succeededOrFailed()
     displayName: "Checkout $(repo_main_branch) branch"

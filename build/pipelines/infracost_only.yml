@@ -57,6 +57,8 @@ jobs:
 
       # Clone the base branch of the pull request (e.g. main/master) into a temp directory.
       - bash: |
+          mkdir tmp
+          chmod a+w tmp
           branch=$(System.PullRequest.TargetBranch)
           branch=${branch#refs/heads/}
           # Try adding the following to git clone if you're having issues cloning a private repo: --config http.extraheader="AUTHORIZATION: bearer $(System.AccessToken)"
