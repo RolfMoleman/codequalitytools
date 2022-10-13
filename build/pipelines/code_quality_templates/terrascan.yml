@@ -42,8 +42,7 @@ steps:
           scan \
           --verbose \
           --show-passed \
-          --log-output-dir /reports \
-          --output $str 
+          --log-output-dir /reports 
       elif [[ "$str" == "json" ]]; then
         docker run \
           --volume $(pwd):/Repo \
