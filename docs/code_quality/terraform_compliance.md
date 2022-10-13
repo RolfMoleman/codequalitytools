@@ -150,6 +150,11 @@ steps:
       # ===== Advanced Inputs =====
       #authToken: #Optional
       #allowRedirectDowngrade: false # Optional
+      preventDuplicates: true
+      keyFields: |
+        System.AreaPath
+        System.IterationPath
+        System.Title 
 
   # NOTE: This does not work yet, as the output is not formatted correctly
   - task: PublishTestResults@2

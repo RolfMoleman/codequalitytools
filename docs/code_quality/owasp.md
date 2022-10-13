@@ -102,7 +102,12 @@ steps:
         #outputVariables: # Required if createOutputs = true
         # ===== Advanced Inputs =====
         #authToken: #Optional
-        #allowRedirectDowngrade: false # Optional  
+        #allowRedirectDowngrade: false # Optional
+      preventDuplicates: true
+      keyFields: |
+        System.AreaPath
+        System.IterationPath
+        System.Title   
 
     - task: owaspzap@1
       condition: succeededOrFailed()

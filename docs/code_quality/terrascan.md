@@ -148,6 +148,11 @@ steps:
       # ===== Advanced Inputs =====
       #authToken: #Optional
       #allowRedirectDowngrade: false # Optional
+      preventDuplicates: true
+      keyFields: |
+        System.AreaPath
+        System.IterationPath
+        System.Title 
 
   # Publish the TerraScan report as an artifact to Azure Pipelines
   - task: PublishBuildArtifacts@1
