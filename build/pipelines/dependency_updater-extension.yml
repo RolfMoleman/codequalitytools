@@ -61,87 +61,68 @@ jobs:
         displayName: "Set git config for dependabot user"
         enabled: true
         name: "configure_gituser"
-
-#      - task: dependabot@1
-#        condition: succeededOrFailed()
-#        displayName: "run Dependabot"
-#        enabled: true
-#        name: "run_dependabot"
-#        inputs:
-#          useConfigFile: true
-#          setAutoComplete: true
-#          mergeStrategy: '1'
-#          azureDevOpsAccessToken: '$(System.AccessToken)'
-#          dockerImageRepository: 'tingle/dependabot-azure-devops'
-#          extraEnvironmentVariables: 'PULL_REQUESTS_ASSIGNEE=''$(PULL_REQUESTS_ASSIGNEE)'''
-
-      # Get the repo
-      - script: git clone https://github.com/dependabot/dependabot-script.git
-        condition: succeededOrFailed()
-        displayName: "Clone Dependabot config repo"
-        enabled: true
-        name: "clone_dependabot"
-        workingDirectory: "$(System.DefaultWorkingDirectory)"
       
-#      # Build the docker image
-#      - script: |
-#          cd dependabot-script
-#          docker build -t "dependabot/dependabot-script" -f Dockerfile .
-#        condition: succeededOrFailed()
-#        displayName: "Build Dependabot Image"
-#        enabled: true
-#        name: "build_image"
-#        workingDirectory: "$(System.DefaultWorkingDirectory)"
-#
-#      # Pass your vars to the docker image and execute
-#      # NOTE:
-#      #       You need to get a Person Access Token and to keep it {SECRET} use The [Variables] button in the
-#      #       Azure-Pipelines interface to create a Environmental Variable that the docker image can access but
-#      #       isn't in plain text. Same for the GitHub Access Token if your dependencies are only on GitHub
-#      - script: |
-#          docker run --rm \
-#          -e AZURE_ACCESS_TOKEN='$(System.AccessToken)' \
-#          -e AZURE_HOSTNAME='https://bcagroup.visualstudio.com/' \
-#          -e PACKAGE_MANAGER='$(PACKAGE_MANAGER)' \
-#          -e PROJECT_PATH='$(PROJECT_PATH)' \
-#          -e DIRECTORY_PATH='$(DIRECTORY_PATH)' \
-#          -e PULL_REQUESTS_ASSIGNEE='$(PULL_REQUESTS_ASSIGNEE)' \
-#          dependabot/dependabot-script
-#        condition: succeededOrFailed()
-#        displayName: "Run Dependabot"
-#        enabled: true
-#        name: "run_dependabot"
-#        workingDirectory: "$(System.DefaultWorkingDirectory)"
-
-      # Pull the docker image
-      - script: docker pull dependabot/dependabot-core
+      - task: dependabot@1
         condition: succeededOrFailed()
-        displayName: "pull dependabot-core Docker image"
+        displayName: "Update terraform_local depepndencies"
         enabled: true
-        name: "pull_image"
-        workingDirectory: "$(System.DefaultWorkingDirectory)"
-
-
-      # Pass your vars to the docker image and execute
-      - script: |
-          cd dependabot-script
-          docker run --user $(id -u):$(id -g) \
-                    -v "$(pwd):/home/dependabot/dependabot-script" \
-                    -w /home/dependabot/dependabot-script dependabot/dependabot-core bundle install \
-                    -j 3 \
-                    --path vendor
+        name: "dependabot_terraform_local"
+        inputs:
+          packageManager: 'terraform'
+          directory: '/build/terraform_local'
+          openPullRequestsLimit: 100
+          versioningStrategy: 'auto'
+          setAutoComplete: true
+          mergeStrategy: '1'
+          azureDevOpsAccessToken: '$(System.AccessToken)'
+          dockerImageRepository: 'tingle/dependabot-azure-devops'
+          extraEnvironmentVariables: 'PULL_REQUESTS_ASSIGNEE=$(PULL_REQUESTS_ASSIGNEE)'
+ 
+      - task: dependabot@1
         condition: succeededOrFailed()
-        displayName: "install dependencies"
+        displayName: "Update terraform depepndencies"
         enabled: true
-        name: "install_dependencies"
-        workingDirectory: "$(System.DefaultWorkingDirectory)"
-
-      - task: Bash@3
+        name: "dependabot_terraform"
+        inputs:
+          packageManager: 'terraform'
+          directory: '/build/terraform'
+          openPullRequestsLimit: 100
+          versioningStrategy: 'auto'
+          setAutoComplete: true
+          mergeStrategy: '1'
+          azureDevOpsAccessToken: '$(System.AccessToken)'
+          dockerImageRepository: 'tingle/dependabot-azure-devops'
+          extraEnvironmentVariables: 'PULL_REQUESTS_ASSIGNEE=$(PULL_REQUESTS_ASSIGNEE)'
+ 
+      - task: dependabot@1
         condition: succeededOrFailed()
-        displayName: "run dependabot"
+        displayName: "Update maven depepndencies"
         enabled: true
-        env:
-          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-        inputs: 
-          filePath: '$(System.DefaultWorkingDirectory)/build/scripts/dependabot-devops.sh'
-        name: "run_dependabot"
+        name: "dependabot_maven"
+        inputs:
+          packageManager: 'maven'
+          directory: '/'
+          openPullRequestsLimit: 100
+          versioningStrategy: 'auto'
+          setAutoComplete: true
+          mergeStrategy: '1'
+          azureDevOpsAccessToken: '$(System.AccessToken)'
+          dockerImageRepository: 'tingle/dependabot-azure-devops'
+          extraEnvironmentVariables: 'PULL_REQUESTS_ASSIGNEE=$(PULL_REQUESTS_ASSIGNEE)'
+ 
+      - task: dependabot@1
+        condition: succeededOrFailed()
+        displayName: "Update docker depepndencies"
+        enabled: true
+        name: "dependabot_docker"
+        inputs:
+          packageManager: 'docker'
+          directory: '/'
+          openPullRequestsLimit: 100
+          versioningStrategy: 'auto'
+          setAutoComplete: true
+          mergeStrategy: '1'
+          azureDevOpsAccessToken: '$(System.AccessToken)'
+          dockerImageRepository: 'tingle/dependabot-azure-devops'
+          extraEnvironmentVariables: 'PULL_REQUESTS_ASSIGNEE=$(PULL_REQUESTS_ASSIGNEE)'
+ 
