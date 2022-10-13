@@ -1,0 +1,146 @@
+## pipeline name: repo_template - infracost ##
+name: $(Date:yy)-$(Date:MM)-$(Date:dd).$(Rev:r)
+pool:
+    vmImage: "ubuntu-latest"
+pr:
+  branches:
+    include:
+      - "*"
+  paths:
+    include:
+      - "*"
+
+variables:
+  
+  - name: system.debug
+    value: true
+  - name: agent.diagnostic
+    value: true
+  - template: /repo_template/build/pipelines/iac_templates/variables.yml
+    parameters:
+      environmentTag: "dev"
+  - name: TF_ROOT
+    value: PATH/TO/TERRAFORM/CODE # Update this!
+  # If you use private modules you'll need this env variable to use 
+  # the same ssh-agent socket value across all steps. 
+  - name: SSH_AUTH_SOCK
+    value: /tmp/ssh_agent.sock
+  # This instructs the CLI to send cost estimates to Infracost Cloud. Our SaaS product
+  #   complements the open source CLI by giving teams advanced visibility and controls.
+  #   The cost estimates are transmitted in JSON format and do not contain any cloud 
+  #   credentials or secrets (see https://infracost.io/docs/faq/ for more information).
+  - name: INFRACOST_ENABLE_CLOUD
+    value: true
+  # If you're using Terraform Cloud/Enterprise and have variables stored on there
+  # you can specify the following to automatically retrieve the variables:
+  # env:
+  # - name: INFRACOST_TERRAFORM_CLOUD_TOKEN
+  #   value: $(tfcToken)
+  # - name: INFRACOST_TERRAFORM_CLOUD_HOST
+  #   value: app.terraform.io # Change this if you're using Terraform Enterprise
+
+jobs:
+  - job: infracost
+    displayName: Run Infracost
+    pool:
+      vmImage: ubuntu-latest
+
+    steps:
+      # If you use private modules, add a base 64 encoded secret
+      # called gitSshKeyBase64 with your private key, so Infracost can access
+      # private repositories (similar to how Terraform/Terragrunt does).
+      # - bash: |
+      #     ssh-agent -a $(SSH_AUTH_SOCK)
+      #     mkdir -p ~/.ssh
+      #     echo "$(echo $GIT_SSH_KEY_BASE_64 | base64 -d)" | tr -d '\r' | ssh-add -
+      #     # Update this to github.com, gitlab.com, bitbucket.org, ssh.dev.azure.com or your source control server's domain
+      #     ssh-keyscan ssh.dev.azure.com >> ~/.ssh/known_hosts
+      #   displayName: Add GIT_SSH_KEY
+      #   env:
+      #     GIT_SSH_KEY_BASE_64: $(gitSshKeyBase64)
+
+      # Install the Infracost CLI, see https://github.com/infracost/infracost-azure-devops#infracostsetup
+      # for other inputs such as version, and pricingApiEndpoint (for self-hosted users).
+      - task: InfracostSetup@1
+        displayName: Setup Infracost
+        inputs:
+          apiKey: $(Infracost_key)
+          version: "0.10.x"
+          currency: "GBP"
+          #pricingApiEndpoint: '$(Infracost_api)'
+          enableDashboard: false
+
+      # Clone the base branch of the pull request (e.g. main/master) into a temp directory.
+      - bash: |
+          branch=$(System.PullRequest.TargetBranch)
+          branch=${branch#refs/heads/}
+          # Try adding the following to git clone if you're having issues cloning a private repo: --config http.extraheader="AUTHORIZATION: bearer $(System.AccessToken)"
+          git clone $(Build.Repository.Uri) --branch=${branch} --single-branch /tmp/base  --config http.extraheader="AUTHORIZATION: bearer $(System.AccessToken)"
+        displayName: Checkout base branch
+
+      # Generate an Infracost cost estimate baseline from the comparison branch, so that Infracost can compare the cost difference.
+      - bash: |
+          echo "Set currency to GBP"
+          infracost configure set currency GBP
+
+          outputTypes=("json" "html" "table")
+
+          for str in ${outputTypes[@]}; do
+
+          echo "Get breakdown for $(repo_main_branch) branch in $str format"
+          infracost breakdown --path=$(System.DefaultWorkingDirectory)/repo_template/build/terraform \
+          --project-name $(project_repo) \
+          --format=json \
+          --out-file=/tmp/infracost-$(repo_main_branch)-$(environment_tag).$str
+
+          done
+        displayName: Generate Infracost cost estimate baseline
+
+      # Generate an Infracost diff and save it to a JSON file.
+      - bash: |
+          echo "Set currency to GBP"
+          infracost configure set currency GBP
+
+          outputTypes=("json" "html" "table")
+
+          for str in ${outputTypes[@]}; do
+
+          echo "Get breakdown for $(repo_branch) branch in $str format"
+          infracost breakdown --path=$(System.DefaultWorkingDirectory)/repo_template/build/terraform \
+          --project-name $(project_repo) \
+          --format=json \
+          --out-file=/tmp/infracost-$(repo_main_branch)-$(environment_tag).$str
+
+          done
+
+          echo "Get difference"
+          infracost diff --path=$(System.DefaultWorkingDirectory)/repo_template/build/terraform \
+                          --project-name $(project_repo) \
+                          --format=json \
+                          --compare-to=/tmp/infracost-$(repo_main_branch)-$(environment_tag).json \
+                          --out-file=/tmp/infracost-difference-$(environment_tag).json
+        displayName: Generate Infracost diff
+
+      # Publish the infracost diff as an artifact to Azure Pipelines
+      - task: PublishBuildArtifacts@1
+        condition: succeededOrFailed()
+        displayName: "Publish Infracost Reports"
+        enabled: true
+        name: "Publish_Infracost_Report"
+        inputs:
+          PathtoPublish: "$(System.DefaultWorkingDirectory)/tmp/"
+          ArtifactName: InfracostReport-$(environment_tag)
+
+      # Posts a comment to the PR using the 'update' behavior.
+      # This creates a single comment and updates it. The "quietest" option.
+      # The other valid behaviors are:
+      #   delete-and-new - Delete previous comments and create a new one.
+      #   new - Create a new cost estimate comment on every push.
+      # See https://www.infracost.io/docs/features/cli_commands/#comment-on-pull-requests for other options.
+      - bash: |
+           infracost comment azure-repos --path=/tmp/infracost-difference-$(environment_tag).json \
+                                         --azure-access-token=$(System.AccessToken) \
+                                         --pull-request=$(System.PullRequest.PullRequestId) \
+                                         --repo-url=$(Build.Repository.Uri) \
+                                         --behavior=update
+        displayName: Post Infracost comment
