@@ -63,7 +63,10 @@ jobs:
           branch=${branch#refs/heads/}
           # Try adding the following to git clone if you're having issues cloning a private repo: --config http.extraheader="AUTHORIZATION: bearer $(System.AccessToken)"
           git clone $(Build.Repository.Uri) --branch=${branch} --single-branch /tmp/base  --config http.extraheader="AUTHORIZATION: bearer $(System.AccessToken)"
-        displayName: Checkout base branch
+        condition: succeededOrFailed()
+        displayName: "Checkout base branch"
+        enabled: true
+        workingDirectory: "$(System.DefaultWorkingDirectory)"
 
       # Generate an Infracost cost estimate baseline from the comparison branch, so that Infracost can compare the cost difference.
       - bash: |
@@ -78,10 +81,13 @@ jobs:
           infracost breakdown --path=$(System.DefaultWorkingDirectory)/build/terraform \
           --project-name $(project_repo) \
           --format=json \
-          --out-file=/tmp/infracost-$(repo_main_branch)-$(environment_tag).$str
+          --out-file=$(System.DefaultWorkingDirectory)/tmp/infracost-$(repo_main_branch)-$(environment_tag).$str
 
           done
-        displayName: Generate Infracost cost estimate baseline
+        condition: succeededOrFailed()
+        displayName: "Generate Infracost cost estimate baseline"
+        enabled: true
+        workingDirectory: "$(System.DefaultWorkingDirectory)"
 
       # Generate an Infracost diff and save it to a JSON file.
       - bash: |
@@ -96,7 +102,7 @@ jobs:
           infracost breakdown --path=$(System.DefaultWorkingDirectory)/build/terraform \
           --project-name $(project_repo) \
           --format=json \
-          --out-file=/tmp/infracost-$(repo_main_branch)-$(environment_tag).$str
+          --out-file=$(System.DefaultWorkingDirectory)/tmp/infracost-$(repo_main_branch)-$(environment_tag).$str
 
           done
 
@@ -104,9 +110,12 @@ jobs:
           infracost diff --path=$(System.DefaultWorkingDirectory)/build/terraform \
                           --project-name $(project_repo) \
                           --format=json \
-                          --compare-to=/tmp/infracost-$(repo_main_branch)-$(environment_tag).json \
-                          --out-file=/tmp/infracost-difference-$(environment_tag).json
-        displayName: Generate Infracost diff
+                          --compare-to=$(System.DefaultWorkingDirectory)/tmp/infracost-$(repo_main_branch)-$(environment_tag).json \
+                          --out-file=$(System.DefaultWorkingDirectory)/tmp/infracost-difference-$(environment_tag).json
+        condition: succeededOrFailed()
+        displayName: "Generate Infracost diff"
+        enabled: true
+        workingDirectory: "$(System.DefaultWorkingDirectory)"
 
       # Publish the infracost diff as an artifact to Azure Pipelines
       - task: PublishBuildArtifacts@1
@@ -125,12 +134,13 @@ jobs:
       #   new - Create a new cost estimate comment on every push.
       # See https://www.infracost.io/docs/features/cli_commands/#comment-on-pull-requests for other options.
       - bash: |
-           infracost comment azure-repos --path=/tmp/infracost-difference-$(environment_tag).json \
+           infracost comment azure-repos --path=$(System.DefaultWorkingDirectory)/tmp/infracost-difference-$(environment_tag).json \
                                          --azure-access-token=$(System.AccessToken) \
                                          --pull-request=$(System.PullRequest.PullRequestId) \
                                          --repo-url=$(Build.Repository.Uri) \
                                          --behavior=update
-        condition: succeededOrFailed()
+        condition: and(succeededOrFailed(),eq(variables['Build.Reason'], 'PullRequest'))
         displayName: Post Infracost comment
         enabled: true
         name: "Infracost_comment"
+        workingDirectory: "$(System.DefaultWorkingDirectory)"
