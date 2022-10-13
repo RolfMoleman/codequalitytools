@@ -62,9 +62,36 @@ jobs:
         enabled: true
         name: "configure_gituser"
       
+      - task: Cache@2
+        inputs:
+          key: docker | "tingle/dependabot-azure-devops:0.9"
+          path: $(Pipeline.Workspace)/docker
+          cacheHitVar: DOCKER_CACHE_HIT
+        condition: succeededOrFailed()
+        displayName: Cache Docker images
+        enabled: true
+        name: "cache_docker"
+
+      - script: |
+                  docker load -i $(Pipeline.Workspace)/docker/cache.tar
+        condition: and(not(canceled()), eq(variables.DOCKER_CACHE_HIT, 'true'))
+        displayName: Restore Docker image
+        enabled: true
+        name: "load_dockercache"
+        
+
+      - script: |
+          mkdir -p $(Pipeline.Workspace)/docker
+          docker pull -q tingle/dependabot-azure-devops:0.9
+          docker save -o $(Pipeline.Workspace)/docker/cache.tar tingle/dependabot-azure-devops:0.9              
+        condition: and(not(canceled()), or(failed(), ne(variables.DOCKER_CACHE_HIT, 'true')))
+        displayName: Save Docker image
+        enabled: true
+        name: "save_dockerimage"
+
       - task: dependabot@1
         condition: succeededOrFailed()
-        displayName: "Update terraform_local depepndencies"
+        displayName: "Update terraform_local dependencies"
         enabled: true
         name: "dependabot_terraform_local"
         inputs:
@@ -80,7 +107,7 @@ jobs:
  
       - task: dependabot@1
         condition: succeededOrFailed()
-        displayName: "Update terraform depepndencies"
+        displayName: "Update terraform dependencies"
         enabled: true
         name: "dependabot_terraform"
         inputs:
@@ -96,7 +123,7 @@ jobs:
  
       - task: dependabot@1
         condition: succeededOrFailed()
-        displayName: "Update maven depepndencies"
+        displayName: "Update maven dependencies"
         enabled: true
         name: "dependabot_maven"
         inputs:
@@ -112,7 +139,7 @@ jobs:
  
       - task: dependabot@1
         condition: succeededOrFailed()
-        displayName: "Update docker depepndencies"
+        displayName: "Update docker dependencies"
         enabled: true
         name: "dependabot_docker"
         inputs:
