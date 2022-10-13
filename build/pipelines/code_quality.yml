@@ -140,6 +140,34 @@ stages:
                   persistCredentials: true
                 - template: code_quality_templates/mega_linter.yml
 
+  ## Software composition Analysis tool
+  - stage: dev_dependabot
+    condition: succeededOrFailed()
+    dependsOn:
+    displayName: "run dependabot"
+    jobs:
+      - deployment: dev_dependabot_provisioning
+        environment: "dev-plan"
+        timeoutInMinutes: 0
+        variables:
+          - name: system.debug
+            value: true
+          - name: agent.diagnostic
+            value: true
+          - template: iac_templates/variables.yml
+            parameters:
+              environmentTag: "dev"
+        displayName: "dev"
+        pool:
+          vmImage: "ubuntu-latest"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                  persistCredentials: true
+                - template: code_quality_templates/dependabot.yml
+
 #  # Creates backlog items for failed tests - do not enable without discussing with the product team
 #  - stage: dev_board_updater
 #    condition: succeededOrFailed()
