@@ -29,6 +29,7 @@ steps:
 
   - script: |
       mkdir terrascanreports
+      chmod a+w terrascanreports
       outputTypes=("human" "json" "junit-xml" "sarif" "yaml")
 
       for str in ${outputTypes[@]}; do
