@@ -4,10 +4,11 @@
 steps:
   - task: Maven@3
     condition: succeededorfailed()
-    displayName: 'Maven package'
+    displayName: 'Maven $(maven_goal)'
     enabled: true
     inputs:
       mavenPomFile: '$(projectDir)/pom.xml'
+      goals: '$(maven_goal)'
       options: '--batch-mode -s $(pipelinesCommonDir)/maven/settings-devops.xml -Ddocker.skip=true'
       publishJUnitResults: true
       testResultsFiles: '**/surefire-reports/TEST-*.xml'
