@@ -41,6 +41,9 @@ variables:
     value: "https://dev.azure.com/bcagroup/BCA.Operations.Utilities/_git/repo_template"
   - name: prisma_api_url
     value: "https://api2.eu.prismacloud.io/"
+  # Maven
+  - name: maven_goal
+    value: "package"    
   # Git
   #- name: gitTag
   #  value: 'https://dev.azure.com/bcagroup/BCA.Operations.Utilities/_git/repo_template'
