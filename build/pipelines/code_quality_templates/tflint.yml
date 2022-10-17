@@ -1,4 +1,31 @@
 steps:
+
+  - task: Cache@2
+    inputs:
+      key: docker | "ghcr.io/terraform-linters/tflint-bundle:latest"
+      path: $(Pipeline.Workspace)/docker
+      cacheHitVar: DOCKER_CACHE_HIT
+    condition: succeededOrFailed()
+    displayName: Cache Docker images
+    enabled: true
+    name: "cache_docker"
+
+  - script: |
+              docker load -i $(Pipeline.Workspace)/docker/cache.tar
+    condition: and(not(canceled()), eq(variables.DOCKER_CACHE_HIT, 'true'))
+    displayName: Restore Docker image
+    enabled: true
+    name: "load_dockercache"
+
+  - script: |
+      mkdir -p $(Pipeline.Workspace)/docker
+      docker pull -q ghcr.io/terraform-linters/tflint-bundle:latest
+      docker save -o $(Pipeline.Workspace)/docker/cache.tar ghcr.io/terraform-linters/tflint-bundle:latest
+    condition: and(not(canceled()), or(failed(), ne(variables.DOCKER_CACHE_HIT, 'true')))
+    displayName: Save Docker image
+    enabled: true
+    name: "save_dockerimage"
+
   # TFLint is a framework that finds possible errors (like illegal instance types) for major cloud providers (AWS/Azure/GCP), warn about deprecated syntax, unused declarations, and enforce best practices, naming conventions.
   - task: qetza.replacetokens.replacetokens-task.replacetokens@5
     condition: succeededOrFailed()
@@ -6,24 +33,23 @@ steps:
     enabled: true
     name: "Terraform_Version_replacement"
     inputs:
-        rootDirectory: '$(System.DefaultWorkingDirectory)/repo_template/build/terraform'
-        targetFiles: '**/*.tf'
-        encoding: 'auto'
-        tokenPattern: 'rm'
-        writeBOM: true
-        escapeType: 'none'
-        actionOnMissing: 'fail'
-        keepToken: true
-        actionOnNoFiles: 'warn'
-        enableTransforms: false
-        enableRecursion: false
-        useLegacyPattern: false
-        enableTelemetry: true
+      rootDirectory: "$(System.DefaultWorkingDirectory)/repo_template/build/terraform"
+      targetFiles: "**/*.tf"
+      encoding: "auto"
+      tokenPattern: "rm"
+      writeBOM: true
+      escapeType: "none"
+      actionOnMissing: "fail"
+      keepToken: true
+      actionOnNoFiles: "warn"
+      enableTransforms: false
+      enableRecursion: false
+      useLegacyPattern: false
+      enableTelemetry: true
   - script: |
       mkdir TFLintReport
-      docker pull ghcr.io/terraform-linters/tflint-bundle:latest
       outputTypes=("default" "json" "checkstyle" "junit" "compact" "sarif")
-      
+
             for str in ${outputTypes[@]}; do
         
         if [[ "$str" == "default" ]]; then
@@ -76,18 +102,18 @@ steps:
   # Create work items to review failures
   - task: CreateWorkItem@1
     condition: failed()
-    displayName: 'Create work item'
+    displayName: "Create work item"
     enabled: true
     inputs:
       #teamProject: # Optional
-      workItemType: 'Product Backlog Item'
-      title: 'Review TFLint failures for $(project_repo) repository'
+      workItemType: "Product Backlog Item"
+      title: "Review TFLint failures for $(project_repo) repository"
       #assignedTo: # Optional
       #areaPath: # Optional
       #iterationPath: # Optional
       fieldMappings: "Description=Please review the attached files and linked build" # Optional; Required if your process defines additional required work item fields
       associate: true # Optional
-      associationType: 'foundinbuild' # Optional; Valid values: build, integratedInBuild, foundInBuild
+      associationType: "foundinbuild" # Optional; Valid values: build, integratedInBuild, foundInBuild
       # ===== Linking Inputs =====
       #linkWorkItems: false # Optional
       #linkType: # Required if linkWorkItems = true
@@ -101,7 +127,7 @@ steps:
       # ===== Attachments Inputs =====
       addAttachments: true # Optional
       attachmentsFolder: "$(System.DefaultWorkingDirectory)/TFLintReport/" # Optional
-      attachments: '*.*' # Required if addAttachments = true
+      attachments: "*.*" # Required if addAttachments = true
       # ===== Duplicate Inputs =====
       #preventDuplicates: false # Optional
       #keyFields: # Required if preventDuplicates = true
@@ -113,6 +139,11 @@ steps:
       # ===== Advanced Inputs =====
       #authToken: #Optional
       #allowRedirectDowngrade: false # Optional
+      preventDuplicates: true
+      keyFields: |
+        System.AreaPath
+        System.IterationPath
+        System.Title 
 
   # Publish the TFLint report as an artifact to Azure Pipelines
   - task: PublishBuildArtifacts@1
@@ -130,7 +161,7 @@ steps:
     displayName: "Copy Sarif Files"
     enabled: true
     inputs:
-      targetType: 'inline'
+      targetType: "inline"
       script: |
         cd $(System.DefaultWorkingDirectory)/TFLintReport
         $files = dir
@@ -148,7 +179,7 @@ steps:
         }
       showWarnings: true
       pwsh: true
-      workingDirectory: '$(System.DefaultWorkingDirectory)'
+      workingDirectory: "$(System.DefaultWorkingDirectory)"
 
   #publish tflint Scan
   - task: PublishBuildArtifacts@1
@@ -184,4 +215,3 @@ steps:
     enabled: true
     name: "Remove_terraform_Quality_Check_Docker_Images"
     workingDirectory: "$(System.DefaultWorkingDirectory)"
-    

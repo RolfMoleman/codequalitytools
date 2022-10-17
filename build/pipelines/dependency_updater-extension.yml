@@ -1,0 +1,155 @@
+##
+## Dependabot automated dependency updater
+##
+
+# Source Documentation
+# https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot
+# https://sanderh.dev/Dependabot-Azure-DevOps/
+# https://www.youtube.com/watch?v=4ELai1FivK4
+# https://github.com/dependabot/dependabot-script
+# https://techcommunity.microsoft.com/t5/azure-devops-blog/keeping-your-dependencies-updated-with-azure-pipelines-and/ba-p/3590020
+
+# Display name when the pipeline is running
+name: 'Dependabot -- $(Date:yyyyMMdd)$(Rev:.r)'
+
+pool:
+  vmImage: "ubuntu-latest"
+
+schedules:
+- cron: "0 1 * * */4 "
+  # at 01:00 UTC every wednesday
+  displayName: Weekly Dependabot run
+  batch: false
+  # run even when there are no code changes
+  always: true
+  # run only on these branches
+  branches:
+    include:
+      - "*"
+
+jobs:
+  - job: 'Dependabot'
+    pool:
+      # requires macos or ubuntu (windows is not supported)
+      vmImage: 'ubuntu-latest'
+
+    # Vars to be passed to the docker image
+    variables:
+    - name: DIRECTORY_PATH
+      value: /
+    - name: PACKAGE_MANAGER
+      value: terraform
+    # On Azure DevOps this should be the: <Org>/<Project>/_git/<Repo_Name>
+    - name: PROJECT_PATH
+      value: bcagroup/BCA.Operations.Utilities/_git/repo_template
+    # Who "Opened" the Pull request. Useful to assign to a service account named "Dependabot"
+    - name: PULL_REQUESTS_ASSIGNEE
+      value: 'Dependabot'
+
+    steps:
+    
+      #checkout
+      - checkout: self
+        persistCredentials: true
+
+      # Git Config
+      - script: |
+          echo "set git config to Dependabot user"
+          git config --global user.email "Dependabot@bca.com"
+          git config --global user.name "Dependabot"
+        condition: succeededOrFailed()
+        displayName: "Set git config for dependabot user"
+        enabled: true
+        name: "configure_gituser"
+      
+      - task: Cache@2
+        inputs:
+          key: docker | "tingle/dependabot-azure-devops:0.9"
+          path: $(Pipeline.Workspace)/docker
+          cacheHitVar: DOCKER_CACHE_HIT
+        condition: succeededOrFailed()
+        displayName: Cache Docker images
+        enabled: true
+        name: "cache_docker"
+
+      - script: |
+                  docker load -i $(Pipeline.Workspace)/docker/cache.tar
+        condition: and(not(canceled()), eq(variables.DOCKER_CACHE_HIT, 'true'))
+        displayName: Restore Docker image
+        enabled: true
+        name: "load_dockercache"
+        
+
+      - script: |
+          mkdir -p $(Pipeline.Workspace)/docker
+          docker pull -q tingle/dependabot-azure-devops:0.9
+          docker save -o $(Pipeline.Workspace)/docker/cache.tar tingle/dependabot-azure-devops:0.9              
+        condition: and(not(canceled()), or(failed(), ne(variables.DOCKER_CACHE_HIT, 'true')))
+        displayName: Save Docker image
+        enabled: true
+        name: "save_dockerimage"
+
+      - task: dependabot@1
+        condition: succeededOrFailed()
+        displayName: "Update terraform_local dependencies"
+        enabled: true
+        name: "dependabot_terraform_local"
+        inputs:
+          packageManager: 'terraform'
+          directory: '/build/terraform_local'
+          openPullRequestsLimit: 100
+          versioningStrategy: 'auto'
+          setAutoComplete: true
+          mergeStrategy: '1'
+          azureDevOpsAccessToken: '$(System.AccessToken)'
+          dockerImageRepository: 'tingle/dependabot-azure-devops'
+          extraEnvironmentVariables: 'PULL_REQUESTS_ASSIGNEE=$(PULL_REQUESTS_ASSIGNEE)'
+ 
+      - task: dependabot@1
+        condition: succeededOrFailed()
+        displayName: "Update terraform dependencies"
+        enabled: true
+        name: "dependabot_terraform"
+        inputs:
+          packageManager: 'terraform'
+          directory: '/build/terraform'
+          openPullRequestsLimit: 100
+          versioningStrategy: 'auto'
+          setAutoComplete: true
+          mergeStrategy: '1'
+          azureDevOpsAccessToken: '$(System.AccessToken)'
+          dockerImageRepository: 'tingle/dependabot-azure-devops'
+          extraEnvironmentVariables: 'PULL_REQUESTS_ASSIGNEE=$(PULL_REQUESTS_ASSIGNEE)'
+ 
+      - task: dependabot@1
+        condition: succeededOrFailed()
+        displayName: "Update maven dependencies"
+        enabled: true
+        name: "dependabot_maven"
+        inputs:
+          packageManager: 'maven'
+          directory: '/'
+          openPullRequestsLimit: 100
+          versioningStrategy: 'auto'
+          setAutoComplete: true
+          mergeStrategy: '1'
+          azureDevOpsAccessToken: '$(System.AccessToken)'
+          dockerImageRepository: 'tingle/dependabot-azure-devops'
+          extraEnvironmentVariables: 'PULL_REQUESTS_ASSIGNEE=$(PULL_REQUESTS_ASSIGNEE)'
+ 
+      - task: dependabot@1
+        condition: succeededOrFailed()
+        displayName: "Update docker dependencies"
+        enabled: true
+        name: "dependabot_docker"
+        inputs:
+          packageManager: 'docker'
+          directory: '/'
+          openPullRequestsLimit: 100
+          versioningStrategy: 'auto'
+          setAutoComplete: true
+          mergeStrategy: '1'
+          azureDevOpsAccessToken: '$(System.AccessToken)'
+          dockerImageRepository: 'tingle/dependabot-azure-devops'
+          extraEnvironmentVariables: 'PULL_REQUESTS_ASSIGNEE=$(PULL_REQUESTS_ASSIGNEE)'
+ 

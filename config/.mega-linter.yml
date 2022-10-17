@@ -4,6 +4,7 @@
 # See all available variables at https://megalinter.github.io/configuration/ and in linters documentation
 
 APPLY_FIXES: all # all, none, or list of linter keys
+CLEAR_REPORT_FOLDER: true
 # ENABLE: # If you use ENABLE variable, all other languages/formats/tooling-formats will be disabled by default
 # If you use ENABLE_LINTERS variable, all other linters will be disabled by default
 # ENABLE_LINTERS:
@@ -30,10 +31,10 @@ TERRAFORM_CHECKOV_ARGUMENTS:
   - "--include-all-checkov-policies" # settings to allow integration with bridgecrew using pipeline variables
 TERRAFORM_CHECKOV_CLI_LINT_MODE: file # Options are file (default), list_of_files or project. Project scans from the root of the Repo
 #TERRAFORM_KICS_ARGUMENTS:
-  #- "-m"
-  #- "--config ../kics.config"
-  #- "--output-path KICSReports"
-  #- "--output-name kics-report-$(environment_tag)" # settings to match KICS pipeline
+#- "-m"
+#- "--config ../kics.config"
+#- "--output-path KICSReports"
+#- "--output-name kics-report-$(environment_tag)" # settings to match KICS pipeline
 TERRAFORM_KICS_CLI_LINT_MODE: file # Options are file (default), list_of_files or project. Project scans from the root of the Repo
 TERRAFORM_TERRASCAN_ARGUMENTS:
   - "--verbose"
@@ -65,5 +66,6 @@ JSON_REPORTER: true
 JSON_REPORTER_OUTPUT_DETAIL: "detailed"
 #CONFIG_REPORTER: true
 #CONFIG_REPORTER_SUB_FOLDER: IDE-config
-SHOW_SKIPPED_LINTERS: 
+SHOW_SKIPPED_LINTERS: true
 VALIDATE_ALL_CODEBASE: true
+#AZURE_COMMENT_REPORTER: true

@@ -2,9 +2,34 @@ steps:
   # The GitHub Super-Linter runs a combination of various linters, written in bash, to help validate your source code. In particular, this will execute TFLint, and TerraScan against terraform files.
   # Documentation: https://github.com/github/super-linter
 
+  - task: Cache@2
+    inputs:
+      key: docker | "github/super-linter:latest"
+      path: $(Pipeline.Workspace)/docker
+      cacheHitVar: DOCKER_CACHE_HIT
+    condition: succeededOrFailed()
+    displayName: Cache Docker images
+    enabled: true
+    name: "cache_docker"
+
+  - script: |
+              docker load -i $(Pipeline.Workspace)/docker/cache.tar
+    condition: and(not(canceled()), eq(variables.DOCKER_CACHE_HIT, 'true'))
+    displayName: Restore Docker image
+    enabled: true
+    name: "load_dockercache"
+
+  - script: |
+      mkdir -p $(Pipeline.Workspace)/docker
+      docker pull -q github/super-linter:latest
+      docker save -o $(Pipeline.Workspace)/docker/cache.tar github/super-linter:latest
+    condition: and(not(canceled()), or(failed(), ne(variables.DOCKER_CACHE_HIT, 'true')))
+    displayName: Save Docker image
+    enabled: true
+    name: "save_dockerimage"  
+
   - script: |
       mkdir GHLinterReports
-      docker pull github/super-linter:latest
       docker run --tty \
         --entrypoint="" \
         -e RUN_LOCAL=true \

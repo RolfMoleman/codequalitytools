@@ -147,7 +147,12 @@ steps:
       #outputVariables: # Required if createOutputs = true
       # ===== Advanced Inputs =====
       #authToken: #Optional
-      #allowRedirectDowngrade: false # Optional  
+      #allowRedirectDowngrade: false # Optional
+      preventDuplicates: true
+      keyFields: |
+        System.AreaPath
+        System.IterationPath
+        System.Title   
 
   # Create work items to review failures
   - task: CreateWorkItem@1
@@ -189,7 +194,12 @@ steps:
       #outputVariables: # Required if createOutputs = true
       # ===== Advanced Inputs =====
       #authToken: #Optional
-      #allowRedirectDowngrade: false # Optional  
+      #allowRedirectDowngrade: false # Optional
+      preventDuplicates: true
+      keyFields: |
+        System.AreaPath
+        System.IterationPath
+        System.Title   
 
   # Publish the Checkov report as an artifact to Azure Pipelines
   - task: PublishBuildArtifacts@1

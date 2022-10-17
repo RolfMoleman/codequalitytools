@@ -81,6 +81,11 @@ steps:
       # ===== Advanced Inputs =====
       #authToken: #Optional
       #allowRedirectDowngrade: false # Optional
+      preventDuplicates: true
+      keyFields: |
+        System.AreaPath
+        System.IterationPath
+        System.Title 
 
   - task: PublishBuildArtifacts@1
     condition: succeededOrFailed()

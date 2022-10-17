@@ -4,14 +4,16 @@ steps:
     displayName: "Infracost Setup"
     enabled: true
     inputs:
-      apiKey: '$(Infracost_key)'
-      version: '0.10.x'
-      currency: 'GBP'
-     #pricingApiEndpoint: '$(Infracost_api)'
+      apiKey: "$(Infracost_key)"
+      version: "0.10.x"
+      currency: "GBP"
+      #pricingApiEndpoint: '$(Infracost_api)'
       enableDashboard: false
 
   # Clone the base branch of the Repo (e.g. main/master) into a temp directory.
   - bash: |
+      mkdir tmp
+      chmod a+w tmp
       git clone $(repo_url) --branch=$(repo_main_branch) --single-branch /tmp/base --config http.extraheader="AUTHORIZATION: bearer $(System.AccessToken)"
     condition: succeededOrFailed()
     displayName: "Checkout $(repo_main_branch) branch"
@@ -22,7 +24,7 @@ steps:
   - bash: |
       echo "Set currency to GBP"
       infracost configure set currency GBP
-      
+
       outputTypes=("json" "html" "table")
 
       for str in ${outputTypes[@]}; do
@@ -31,7 +33,7 @@ steps:
       infracost breakdown --path=$(System.DefaultWorkingDirectory)/repo_template/build/terraform \
       --project-name $(project_repo) \
       --format=json \
-      --out-file=/tmp/infracost-$(repo_main_branch)-$(environment_tag).$str
+      --out-file=$(System.DefaultWorkingDirectory)/tmp/infracost-$(repo_main_branch)-$(environment_tag).$str
 
       done
     condition: succeededOrFailed()
@@ -43,7 +45,7 @@ steps:
   - bash: |
       echo "Set currency to GBP"
       infracost configure set currency GBP
-      
+
       outputTypes=("json" "html" "table")
 
       for str in ${outputTypes[@]}; do
@@ -52,7 +54,7 @@ steps:
       infracost breakdown --path=$(System.DefaultWorkingDirectory)/repo_template/build/terraform \
       --project-name $(project_repo) \
       --format=json \
-      --out-file=/tmp/infracost-$(repo_main_branch)-$(environment_tag).$str
+      --out-file=$(System.DefaultWorkingDirectory)/tmp/infracost-$(repo_main_branch)-$(environment_tag).$str
 
       done
 
@@ -60,13 +62,12 @@ steps:
       infracost diff --path=$(System.DefaultWorkingDirectory)/repo_template/build/terraform \
                       --project-name $(project_repo) \
                       --format=json \
-                      --compare-to=/tmp/infracost-$(repo_main_branch)-$(environment_tag).json \
-                      --out-file=/tmp/infracost-difference-$(environment_tag).json
+                      --compare-to=$(System.DefaultWorkingDirectory)/tmp/infracost-$(repo_main_branch)-$(environment_tag).json \
+                      --out-file=$(System.DefaultWorkingDirectory)/tmp/infracost-difference-$(environment_tag).json
     condition: succeededOrFailed()
     displayName: "Generate Infracost diff"
     enabled: true
     workingDirectory: "$(System.DefaultWorkingDirectory)"
-
 
   # Publish the infracost diff as an artifact to Azure Pipelines
   - task: PublishBuildArtifacts@1
@@ -78,20 +79,21 @@ steps:
       PathtoPublish: "$(System.DefaultWorkingDirectory)/tmp/"
       ArtifactName: InfracostReport-$(environment_tag)
 
-  ### Pull request specific run will not work for this application due to the use of templates
-  ## Posts a comment to the PR using the 'update' behavior.
-  ## This creates a single comment and updates it. The "quietest" option.
-  ## The other valid behaviors are:
-  ##   delete-and-new - Delete previous comments and create a new one.
-  ##   new - Create a new cost estimate comment on every push.
-  ## See https://www.infracost.io/docs/features/cli_commands/#comment-on-pull-requests for other options.
-  #- bash: |
-  #    infracost comment azure-repos --path=/tmp/infracost-$(environment_tag).json \
-  #                                  --azure-access-token=$(System.AccessToken) \
-  #                                  --pull-request=$(System.PullRequest.PullRequestId) \
-  #                                  --Repo-url=$(Build.Repository.Uri) \
-  #                                  --behavior=update
-  #  condition: succeededOrFailed()
-  #  displayName: "Post Infracost comment"
-  #  enabled: true
-  #  workingDirectory: "$(System.DefaultWorkingDirectory)"
+  ## Pull request specific run will not work for this application due to the use of templates
+  # Posts a comment to the PR using the 'update' behavior.
+  # This creates a single comment and updates it. The "quietest" option.
+  # The other valid behaviors are:
+  #   delete-and-new - Delete previous comments and create a new one.
+  #   new - Create a new cost estimate comment on every push.
+  # See https://www.infracost.io/docs/features/cli_commands/#comment-on-pull-requests for other options.
+  - bash: |
+      infracost comment azure-repos --path=/tmp/infracost-$(environment_tag).json \
+                                    --azure-access-token=$(System.AccessToken) \
+                                    --pull-request=$(System.PullRequest.PullRequestId) \
+                                    --Repo-url=$(Build.Repository.Uri) \
+                                    --behavior=update
+    condition: and(succeededOrFailed(),eq(variables['Build.Reason'], 'PullRequest'))
+    displayName: "Post Infracost comment"
+    enabled: true
+    name: "Infracost_comment"
+    workingDirectory: "$(System.DefaultWorkingDirectory)"

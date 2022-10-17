@@ -1,0 +1,40 @@
+###
+### MAven specific sonar cloud process
+### depending on  your code language, you may need a build step to compile your code before using Sonar Cloud.
+###
+steps:
+  - task: SonarCloudPrepare@1
+    condition: succeededOrFailed()
+    displayName: 'Prepare for sonarcloud analysis'
+    enabled: true
+    inputs:
+      SonarCloud: 'Sonar Cloud'
+      organization: '$(sonarcloud_organization)'
+      scannerMode: 'Other'
+
+  - task: Maven@3
+    condition: succeededorfailed()
+    displayName: 'Maven Sonar Cloud scanner'
+    enabled: true
+    inputs:
+      mavenPomFile: '$(projectDir)/pom.xml'
+      goals: 'sonar:sonar'
+      options: '--batch-mode -s $(pipelinesCommonDir)/maven/settings-devops.xml -Ddocker.skip=true  -Dsonar.login=$(sonarcloud_apitoken)  -Dsonar.host.url=https://sonarcloud.io -Dsonar.organization=$(sonarcloud_organization) -Dsonar.projectKey=$(sonarcloud_cliprojectkey)'
+      publishJUnitResults: true
+      testResultsFiles: '**/surefire-reports/TEST-*.xml'
+      javaHomeOption: 'JDKVersion'
+      jdkVersionOption: '1.11'
+      mavenVersionOption: 'Default'
+      mavenAuthenticateFeed: true
+      effectivePomSkip: false
+      sonarQubeRunAnalysis: false
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      SONAR_TOKEN:- task: Maven@3
+
+  - task: SonarCloudPublish@1
+    condition: succeededorfailed()
+    displayName: 'Publish Sonar Cloud results on build summary'
+    enabled: true
+    inputs:
+      pollingTimeoutSec: '300'

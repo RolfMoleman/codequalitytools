@@ -120,7 +120,12 @@ Once the scan has been ran the following steps are then also ran:
       #outputVariables: # Required if createOutputs = true
       # ===== Advanced Inputs =====
       #authToken: #Optional
-      #allowRedirectDowngrade: false # Optional  
+      #allowRedirectDowngrade: false # Optional
+      preventDuplicates: true
+      keyFields: |
+        System.AreaPath
+        System.IterationPath
+        System.Title   
 
   #publish reports
   - task: PublishBuildArtifacts@1
