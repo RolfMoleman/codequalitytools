@@ -1,0 +1,208 @@
+name: $(Date:yy)-$(Date:MM)-$(Date:dd).$(Rev:r)
+
+trigger:
+  branches:
+    include:
+      - main
+      - development/development
+    exclude:
+      - "*"
+  paths:
+    include:
+      - "build/pipelines/*"
+      - "build/pipelines/code_quality_templates/*"
+      - "build/pipelines/iac_templates/*"
+      - 'build/terraform/*'
+      - "terraform/*"
+    exclude:
+      - "*"
+stages:
+  #Development
+  - stage: dev_plan
+    condition: succeededOrFailed()
+    dependsOn:
+    displayName: "terraform_plan_dev"
+    jobs:
+      - deployment: dev_env_provisioning
+        environment: "dev-plan"
+        timeoutInMinutes: 0
+        variables:
+          - template: iac_templates/variables.yml
+            parameters:
+              environmentTag: "dev"
+        displayName: "dev"
+        pool:
+          name: "bca-linux-pool"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - template: iac_templates/terraform_plan_cli.yml
+                - task: PublishPipelineArtifact@1
+                  inputs:
+                    path: $(System.DefaultWorkingDirectory)/repo_template/build/terraform/plan_$(environment_tag)
+                    artifact: plan_$(environment_tag)
+
+  - stage: dev_apply
+    condition: succeededOrFailed()
+    dependsOn: dev_plan
+    displayName: "terraform_apply_dev"
+    jobs:
+      - deployment: dev_env_provisioning
+        environment: "dev-apply"
+        timeoutInMinutes: 0
+        variables:
+          - template: iac_templates/variables.yml
+            parameters:
+              environmentTag: "dev"
+        displayName: "dev"
+        pool:
+          name: "bca-linux-pool"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - task: DownloadPipelineArtifact@2
+                  inputs:
+                    artifact: plan_$(environment_tag)
+                    path: $(System.DefaultWorkingDirectory)/repo_template/build/terraform
+                - template: iac_templates/terraform_apply_cli.yml
+  #UAT
+  - stage: uat_plan
+    condition: succeededOrFailed()
+    dependsOn: dev_apply
+    displayName: "terraform_plan_uat"
+    jobs:
+      - deployment: uat_env_provisioning
+        environment: "uat-plan"
+        timeoutInMinutes: 0
+        variables:
+          - template: iac_templates/variables.yml
+            parameters:
+              environmentTag: "uat"
+        displayName: "uat"
+        pool:
+          name: "bca-linux-pool"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - template: iac_templates/terraform_plan_cli.yml
+                - task: PublishPipelineArtifact@1
+                  inputs:
+                    path: $(System.DefaultWorkingDirectory)/repo_template/build/terraform/plan_$(environment_tag)
+                    artifact: plan_$(environment_tag)
+
+  - stage: uat_apply
+    condition: succeeded('uat_plan')
+    dependsOn: 
+      - dev_apply
+      - uat_plan
+    displayName: "terraform_apply_uat"
+    jobs:
+      - deployment: uat_env_provisioning
+        environment: "uat-apply"
+        timeoutInMinutes: 0
+        variables:
+          - template: iac_templates/variables.yml
+            parameters:
+              environmentTag: "uat"
+        displayName: "uat"
+        pool:
+          name: "bca-linux-pool"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - task: DownloadPipelineArtifact@2
+                  inputs:
+                    artifact: plan_$(environment_tag)
+                    path: $(System.DefaultWorkingDirectory)/repo_template/build/terraform
+                - template: iac_templates/terraform_apply_cli.yml
+  #Production
+  - stage: prod_plan
+    condition: succeededOrFailed()
+    dependsOn: 
+      - dev_apply
+      - uat_apply
+    displayName: "terraform_plan_prod"
+    jobs:
+      - deployment: prod_env_provisioning
+        environment: "prod-plan"
+        timeoutInMinutes: 0
+        variables:
+          - template: iac_templates/variables.yml
+            parameters:
+              environmentTag: "prod"
+        displayName: "prod"
+        pool:
+          name: "bca-linux-pool"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - template: iac_templates/terraform_plan_cli.yml
+                - task: PublishPipelineArtifact@1
+                  inputs:
+                    path: $(System.DefaultWorkingDirectory)/repo_template/build/terraform/plan_$(environment_tag)
+                    artifact: plan_$(environment_tag)
+
+  - stage: prod_apply
+    condition: succeeded('prod_plan')
+    dependsOn: 
+      - dev_apply
+      - uat_apply
+      - prod_plan
+    displayName: "terraform_apply_prod"
+    jobs:
+      - deployment: prod_env_provisioning
+        environment: "prod-apply"
+        timeoutInMinutes: 0
+        variables:
+          - template: iac_templates/variables.yml
+            parameters:
+              environmentTag: "prod"
+        displayName: "prod"
+        pool:
+          name: "bca-linux-pool"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - task: DownloadPipelineArtifact@2
+                  inputs:
+                    artifact: plan_$(environment_tag)
+                    path: $(System.DefaultWorkingDirectory)/repo_template/build/terraform
+                - template: iac_templates/terraform_apply_cli.yml
+
+  - stage: create_tag
+    condition: succeeded('prod_apply')
+    dependsOn: 
+      - dev_apply
+      - uat_apply
+      - prod_apply
+    displayName: "create_git_tag"
+    jobs:
+      - job: tagsources
+        timeoutInMinutes: 0
+        variables:
+          - template: iac_templates/variables.yml
+            parameters:
+              environmentTag: "prod"
+        displayName: "prod"
+        pool:
+          name: "bca-windows-pool"
+        steps:
+          - checkout: self
+            persistCredentials: true
+
+          - template: release_templates/create_git_tag.yml
+            parameters:
+              gitTag: '$(Build.BuildNumber)_Infrastructure'
+              gitMessage: 'Infrastructure deploy'
