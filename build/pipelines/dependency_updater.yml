@@ -168,5 +168,5 @@ jobs:
         env:
           SYSTEM_ACCESSTOKEN: $(System.AccessToken)
         inputs: 
-          filePath: '$(System.DefaultWorkingDirectory)/build/scripts/dependabot-devops.sh'
+          filePath: '$(System.DefaultWorkingDirectory)/repo_template/build/scripts/dependabot-devops.sh'
         name: "run_dependabot"
