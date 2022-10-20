@@ -95,6 +95,30 @@ stages:
             persistCredentials: true
           - template: code_quality_templates/infracost.yml
 
+  ## Lightweight scanning tool by Checkmarx that is very easy to setup and run
+  - stage: dev_kics
+    condition: succeededOrFailed()
+    dependsOn:
+    displayName: "run kics on dev"
+    jobs:
+      - job: dev_kics_provisioning
+        timeoutInMinutes: 0
+        variables:
+          - name: system.debug
+            value: true
+          - name: agent.diagnostic
+            value: true
+          - template: iac_templates/variables.yml
+            parameters:
+              environmentTag: "dev"
+        displayName: "dev"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - checkout: self
+            persistCredentials: true
+          - template: code_quality_templates/checkmarx_kics.yml
+
    ## Bit slow but lints everything and has an auto-fix option
   - stage: dev_megalinter
     condition: succeededOrFailed()
