@@ -40,7 +40,7 @@ stages:
           - name: system.debug
             value: true
           - name: agent.diagnostic
-            value: true
+            value: true  
           - template: iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
@@ -51,6 +51,25 @@ stages:
           - checkout: self
             persistCredentials: true
           - template: code_quality_templates/checkov.yml
+
+#  ## Automated dependency updater
+#  - stage: dependabot
+#    displayName: "Check dependencies"
+#    jobs:
+#      - job: 
+#        variables:
+#          - name: system.debug
+#            value: true
+#          - name: agent.diagnostic
+#            value: true  
+#          - template: iac_templates/variables.yml
+#            parameters:
+#              environmentTag: "dev"
+#        displayName: "dev"
+#        pool:
+#          vmImage: "ubuntu-latest"
+#        steps:
+#          - template: code_quality_templates/dependabot.yml
 
   ## Infracost shows cloud cost estimates for Terraform.
   - stage: dev_infracost
@@ -76,13 +95,13 @@ stages:
             persistCredentials: true
           - template: code_quality_templates/infracost.yml
 
-  ## Lightweight scanning tool by Checkmarx that is very easy to setup and run
-  - stage: dev_kics
+   ## Bit slow but lints everything and has an auto-fix option
+  - stage: dev_megalinter
     condition: succeededOrFailed()
     dependsOn:
-    displayName: "run kics on dev"
+    displayName: "run MegaLinter on dev"
     jobs:
-      - job: dev_kics_provisioning
+      - job: dev_megalinter_provisioning
         timeoutInMinutes: 0
         variables:
           - name: system.debug
@@ -98,7 +117,7 @@ stages:
         steps:
           - checkout: self
             persistCredentials: true
-          - template: code_quality_templates/checkmarx_kics.yml
+          - template: code_quality_templates/mega_linter.yml
 
   ## Software composition Analysis tool
   - stage: dev_sonar
@@ -195,19 +214,18 @@ stages:
           - checkout: self
             persistCredentials: true
           - template: code_quality_templates/tfsec.yml
-
-  ## Bit slow but lints everything and has an auto-fix option
-  - stage: dev_megalinter
+            
+  ## a comprehensive security scanner. It is reliable, fast, extremely easy to use, and it works wherever you need it.
+  - stage: dev_trivy
     condition: succeededOrFailed()
     dependsOn:
-    displayName: "run MegaLinter on dev"
+    displayName: "run Trivy on dev"
     jobs:
-      - job: dev_megalinter_provisioning
+      - deployment: dev_trivy_provisioning
+        environment: "dev-plan"
         timeoutInMinutes: 0
         variables:
           - name: system.debug
-            value: true
-          - name: agent.diagnostic
             value: true
           - template: iac_templates/variables.yml
             parameters:
@@ -215,10 +233,13 @@ stages:
         displayName: "dev"
         pool:
           vmImage: "ubuntu-latest"
-        steps:
-          - checkout: self
-            persistCredentials: true
-          - template: code_quality_templates/mega_linter.yml
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                  persistCredentials: true
+                - template: code_quality_templates/trivy.yml
 
   ## runs a terraform plan  and outputs the plan file. this is needed for the compliance check
   - stage: dev_plan

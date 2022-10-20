@@ -28,6 +28,63 @@ trigger:
       - "*"
 
 stages:
+
+  ## Automated dependency updater
+  - stage: dev_dependabot
+    condition: succeededOrFailed()
+    dependsOn:
+    displayName: "run dependabot"
+    jobs:
+      - deployment: dev_dependabot_provisioning
+        environment: "dev-plan"
+        timeoutInMinutes: 0
+        variables:
+          - name: system.debug
+            value: true
+          - name: agent.diagnostic
+            value: true
+          - template: iac_templates/variables.yml
+            parameters:
+              environmentTag: "dev"
+        displayName: "dev"
+        pool:
+          vmImage: "ubuntu-latest"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                  persistCredentials: true
+                - template: code_quality_templates/dependabot.yml
+
+  ## Bit slow but lints everything and has an auto-fix option
+  - stage: dev_megalinter
+    condition: succeededOrFailed()
+    dependsOn:
+    displayName: "run MegaLinter on dev"
+    jobs:
+      - deployment: dev_megalinter_provisioning
+        environment: "dev-plan"
+        timeoutInMinutes: 0
+        variables:
+          - name: system.debug
+            value: true
+          - name: agent.diagnostic
+            value: true
+          - template: iac_templates/variables.yml
+            parameters:
+              environmentTag: "dev"
+        displayName: "dev"
+        pool:
+          vmImage: "ubuntu-latest"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                  persistCredentials: true
+                - template: code_quality_templates/mega_linter.yml
+
   ## Open source software composition Analysis tool
   - stage: dev_mend
     condition: succeededOrFailed()
@@ -112,19 +169,17 @@ stages:
                   persistCredentials: true
                 - template: code_quality_templates/sonar_cloud.yml
 
-  ## Bit slow but lints everything and has an auto-fix option
-  - stage: dev_megalinter
+  ## a comprehensive security scanner. It is reliable, fast, extremely easy to use, and it works wherever you need it.
+  - stage: dev_trivy
     condition: succeededOrFailed()
     dependsOn:
-    displayName: "run MegaLinter on dev"
+    displayName: "run Trivy on dev"
     jobs:
-      - deployment: dev_megalinter_provisioning
+      - deployment: dev_trivy_provisioning
         environment: "dev-plan"
         timeoutInMinutes: 0
         variables:
           - name: system.debug
-            value: true
-          - name: agent.diagnostic
             value: true
           - template: iac_templates/variables.yml
             parameters:
@@ -138,35 +193,9 @@ stages:
               steps:
                 - checkout: self
                   persistCredentials: true
-                - template: code_quality_templates/mega_linter.yml
+                - template: code_quality_templates/trivy.yml
+                  
 
-  ## Software composition Analysis tool
-  - stage: dev_dependabot
-    condition: succeededOrFailed()
-    dependsOn:
-    displayName: "run dependabot"
-    jobs:
-      - deployment: dev_dependabot_provisioning
-        environment: "dev-plan"
-        timeoutInMinutes: 0
-        variables:
-          - name: system.debug
-            value: true
-          - name: agent.diagnostic
-            value: true
-          - template: iac_templates/variables.yml
-            parameters:
-              environmentTag: "dev"
-        displayName: "dev"
-        pool:
-          vmImage: "ubuntu-latest"
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - checkout: self
-                  persistCredentials: true
-                - template: code_quality_templates/dependabot.yml
 
 #  # Creates backlog items for failed tests - do not enable without discussing with the product team
 #  - stage: dev_board_updater

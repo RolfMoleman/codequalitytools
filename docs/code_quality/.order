@@ -11,6 +11,7 @@ terraform_compliance
 terrascan
 tflint
 tfsec
+trivy
 
 
 
