@@ -33,13 +33,13 @@ To get started do the following:
    2. Add the subtree:
 
    ```console
-   git subtree add --prefix=repo_template repo_template <sha, tag, branch>
+   git subtree add --prefix=repo_template repo_template <sha, tag, branch> --message 'Adding repo_template'
    ```
 
    example:
 
    ```console
-   git subtree add --prefix=repo_template repo_template cleanup
+   git subtree add --prefix=repo_template repo_template cleanup --message 'Adding repo_template'
    ```
 
 2. _Optional:_ if you wish to use the included readme template:
@@ -89,13 +89,13 @@ To get started do the following:
 2. Pull:
 
    ```console
-   git subtree pull --prefix=repo_template repo_template <sha, tag, branch>
+   git subtree pull --prefix=repo_template repo_template <sha, tag, branch> --message 'updating repo_template to <sha, tag, branch>'
    ```
 
    example:
 
    ```console
-   git subtree pull --prefix=repo_template repo_template cleanup
+   git subtree pull --prefix=repo_template repo_template cleanup --message 'updating repo_template to cleanup branch'
    ```
 
 ---
