@@ -78,7 +78,7 @@ jobs:
           for str in ${outputTypes[@]}; do
 
           echo "Get breakdown for $(repo_main_branch) branch in $str format"
-          infracost breakdown --path=$(System.DefaultWorkingDirectory)/build/terraform \
+          infracost breakdown --path=$(System.DefaultWorkingDirectory)/repo_template/build/terraform \
           --project-name $(project_repo) \
           --format=json \
           --out-file=$(System.DefaultWorkingDirectory)/tmp/infracost-$(repo_main_branch)-$(environment_tag).$str
@@ -99,7 +99,7 @@ jobs:
           for str in ${outputTypes[@]}; do
 
           echo "Get breakdown for $(repo_branch) branch in $str format"
-          infracost breakdown --path=$(System.DefaultWorkingDirectory)/build/terraform \
+          infracost breakdown --path=$(System.DefaultWorkingDirectory)/repo_template/build/terraform \
           --project-name $(project_repo) \
           --format=json \
           --out-file=$(System.DefaultWorkingDirectory)/tmp/infracost-$(repo_main_branch)-$(environment_tag).$str
@@ -107,7 +107,7 @@ jobs:
           done
 
           echo "Get difference"
-          infracost diff --path=$(System.DefaultWorkingDirectory)/build/terraform \
+          infracost diff --path=$(System.DefaultWorkingDirectory)/repo_template/build/terraform \
                           --project-name $(project_repo) \
                           --format=json \
                           --compare-to=$(System.DefaultWorkingDirectory)/tmp/infracost-$(repo_main_branch)-$(environment_tag).json \
