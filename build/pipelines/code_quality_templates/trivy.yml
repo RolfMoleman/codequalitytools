@@ -49,7 +49,6 @@ steps:
           --template "@contrib/html.tpl" \
           --output /reports/Trivy-Report-$(environment_tag).xml \
           --list-all-pkgs \
-
           --security-checks vuln,config,secret,license \
           --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
           --vuln-type os,library \
@@ -65,7 +64,6 @@ steps:
           --format $str \
           --output /reports/Trivy-Report-$(environment_tag).json \
           --list-all-pkgs \
-
           --security-checks vuln,config,secret,license \
           --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
           --vuln-type os,library \
