@@ -60,7 +60,7 @@ steps:
   - script: |
       mkdir TrivyScanReport
       chmod a+w TrivyScanReport
-      outputTypes=("default" "json" "table" "junit" "sarif" "screen")
+      outputTypes=("default" "html" "json" "junit" "sarif" "screen" "table")
       
       for str in ${outputTypes[@]}; do
         
@@ -68,66 +68,70 @@ steps:
           docker run \
           --volume $(pwd):/Repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
-          --name trivy \
-          aquasec/trivy:latest image \
-          --exit-code 0 \
-          -f json \
+          aquasec/trivy:latest fs \
           -o /reports/Trivy-Report-$(environment_tag).txt \
           --security-checks vuln \
-          --severity LOW,MEDIUM,HIGH,CRITICAL python:3.4-alpine
+          --severity LOW,MEDIUM,HIGH,CRITICAL
+
+        elif [[ "$str" == "html" ]]; then
+          docker run \
+          --volume $(pwd):/Repo \
+          --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
+          aquasec/trivy:latest fs \
+          -f template \
+          --template "@contrib/html.tpl" \
+          -o /reports/Trivy-Report-$(environment_tag).xml \
+          --security-checks vuln \
+          --severity LOW,MEDIUM,HIGH,CRITICAL
 
         elif [[ "$str" == "json" ]]; then
           docker run \
           --volume $(pwd):/Repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
-          --name trivy_1 \
-          aquasec/trivy:latest image \
-          --exit-code 0 \
-          -f json \
+          aquasec/trivy:latest fs \
+          -f $str \
           -o /reports/Trivy-Report-$(environment_tag).json \
           --security-checks vuln \
-          --severity LOW,MEDIUM,HIGH,CRITICAL python:3.4-alpine
+          --severity LOW,MEDIUM,HIGH,CRITICAL
 
-        elif [[ "$str" == "table" ]]; then
-          docker run \
-          --volume $(pwd):/Repo \
-          --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
-          --name trivy_1 \
-          aquasec/trivy:latest image \
-          --exit-code 0 \
-          -f table \
-          --security-checks vuln \
-          --severity LOW,MEDIUM,HIGH,CRITICAL python:3.4-alpine
-          
         elif [[ "$str" == "junit" ]]; then
           docker run \
           --volume $(pwd):/Repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
-          --name trivy_2 \
-          aquasec/trivy:latest image \
-          --exit-code 0 \
-          -f json \
+          aquasec/trivy:latest fs \
+          -f template \
+          --template "@contrib/junit.tpl" \
           -o /reports/Trivy-Report-$(environment_tag).xml \
           --security-checks vuln \
-          --severity LOW,MEDIUM,HIGH,CRITICAL python:3.4-alpine
+          --severity LOW,MEDIUM,HIGH,CRITICAL
 
         elif [[ "$str" == "sarif" ]]; then
           docker run \
           --volume $(pwd):/Repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
-          --name trivy_3 \
-          aquasec/trivy:latest image \
-          --exit-code 0 \
-          -f json \
+          aquasec/trivy:latest fs \
+          -f $str \
           -o /reports/Trivy-Report-$(environment_tag).sarif \
           --security-checks vuln \
-          --severity LOW,MEDIUM,HIGH,CRITICAL python:3.4-alpine
+          --severity LOW,MEDIUM,HIGH,CRITICAL
+          
         elif [[ "$str" == "screen" ]]; then
           docker run \
-          aquasec/trivy:latest image \
-          --exit-code 0 \
+          --volume $(pwd):/Repo \     
+          aquasec/trivy:latest fs \
           --security-checks vuln \
-          --severity LOW,MEDIUM,HIGH,CRITICAL python:3.4-alpine
+          --severity LOW,MEDIUM,HIGH,CRITICAL
+
+        elif [[ "$str" == "table" ]]; then
+          docker run \
+          --volume $(pwd):/Repo \
+          --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
+          aquasec/trivy:latest fs \
+          -f $str \
+          -o /reports/Trivy-Report-table-$(environment_tag).txt \
+          --security-checks vuln \
+          --severity LOW,MEDIUM,HIGH,CRITICAL
+          
       else
           echo "output type not known"
       fi
@@ -138,9 +142,26 @@ steps:
     name: "Trivy_Scan"
     workingDirectory: "$(System.DefaultWorkingDirectory)"
 
+  - script: |
+      Write-Host ("##vso[task.setvariable variable=task.Trivy_Scan.status]failure")             
+    condition: failed()
+    continueOnError: true
+    displayName: Trivy failiure check
+    enabled: true
+    name: "if_trivyfail"
+
+  - script: |
+      mkdir -p $(Pipeline.Workspace)/docker
+      docker save -o $(Pipeline.Workspace)/docker/cache.tar aquasec/trivy:latest              
+    condition: and(not(canceled()), or(failed(), ne(variables.DOCKER_CACHE_HIT, 'true')))
+    continueOnError: true
+    displayName: Save Docker image
+    enabled: true
+    name: "save_dockerimage"
+
   # Create work items to review failures
   - task: CreateWorkItem@1
-    condition: failed()
+    condition: and(eq(variables['task.Trivy_Scan.status'], 'failure'), succeededOrFailed())
     displayName: 'Create work item'
     enabled: true
     inputs:
@@ -181,15 +202,6 @@ steps:
       # ===== Advanced Inputs =====
       #authToken: #Optional
       #allowRedirectDowngrade: false # Optional
-
-  - script: |
-      mkdir -p $(Pipeline.Workspace)/docker
-      docker save -o $(Pipeline.Workspace)/docker/cache.tar aquasec/trivy:latest              
-    condition: and(not(canceled()), or(failed(), ne(variables.DOCKER_CACHE_HIT, 'true')))
-    continueOnError: true
-    displayName: Save Docker image
-    enabled: true
-    name: "save_dockerimage"
 
 #publish trivy Scan
   - task: PublishBuildArtifacts@1
