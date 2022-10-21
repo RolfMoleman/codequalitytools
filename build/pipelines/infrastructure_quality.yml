@@ -292,6 +292,7 @@ stages:
         steps:
           - checkout: self
             persistCredentials: true
+          - template: iac_templates/terraform_plan.yml
           - task: PublishPipelineArtifact@1
             condition: succeeded()
             displayName: "Publish terraform Plan"
@@ -300,7 +301,7 @@ stages:
             inputs:
               path: $(System.DefaultWorkingDirectory)/repo_template/build/terraform/plan-$(environment_tag)
               artifact: plan-$(environment_tag)  
-          - template: iac_templates/terraform_plan.yml
+
 
   ## needs a plan file to run
   - stage: compliance_check
