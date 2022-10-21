@@ -103,9 +103,9 @@ steps:
       Write-Host ("##vso[task.setvariable variable=task.Trivy_Scan.status]failure")             
     condition: failed()
     continueOnError: true
-    displayName: Save Docker image
+    displayName: Trivy failiure check
     enabled: true
-    name: "save_dockerimage"
+    name: "if_trivyfail"
 
   - script: |
       mkdir -p $(Pipeline.Workspace)/docker
