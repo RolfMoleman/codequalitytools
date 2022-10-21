@@ -99,9 +99,26 @@ steps:
     name: "Trivy_Scan"
     workingDirectory: "$(System.DefaultWorkingDirectory)"
 
+  - script: |
+      Write-Host ("##vso[task.setvariable variable=task.Trivy_Scan.status]failure")             
+    condition: failed()
+    continueOnError: true
+    displayName: Save Docker image
+    enabled: true
+    name: "save_dockerimage"
+
+  - script: |
+      mkdir -p $(Pipeline.Workspace)/docker
+      docker save -o $(Pipeline.Workspace)/docker/cache.tar aquasec/trivy:latest              
+    condition: and(not(canceled()), or(failed(), ne(variables.DOCKER_CACHE_HIT, 'true')))
+    continueOnError: true
+    displayName: Save Docker image
+    enabled: true
+    name: "save_dockerimage"
+
   # Create work items to review failures
   - task: CreateWorkItem@1
-    condition: failed()
+    condition: and(eq(variables['task.Trivy_Scan.status'], 'failure'), succeededOrFailed())
     displayName: 'Create work item'
     enabled: true
     inputs:
@@ -142,15 +159,6 @@ steps:
       # ===== Advanced Inputs =====
       #authToken: #Optional
       #allowRedirectDowngrade: false # Optional
-
-  - script: |
-      mkdir -p $(Pipeline.Workspace)/docker
-      docker save -o $(Pipeline.Workspace)/docker/cache.tar aquasec/trivy:latest              
-    condition: and(not(canceled()), or(failed(), ne(variables.DOCKER_CACHE_HIT, 'true')))
-    continueOnError: true
-    displayName: Save Docker image
-    enabled: true
-    name: "save_dockerimage"
 
 #publish trivy Scan
   - task: PublishBuildArtifacts@1
