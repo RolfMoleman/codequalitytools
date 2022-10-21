@@ -27,71 +27,106 @@ steps:
         
         if [[ "$str" == "default" ]]; then
           docker run \
-          --volume $(pwd):/Repo \
+          --volume $(pwd):/repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
           aquasec/trivy:latest fs \
           -o /reports/Trivy-Report-$(environment_tag).txt \
-          --security-checks vuln \
-          --severity LOW,MEDIUM,HIGH,CRITICAL
+          --list-all-pkgs \
+          --dependency-tree \
+          --security-checks vuln,config,secret,license \
+          --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
+          --vuln-type os,library \
+          --license-full \
+          /repo
 
         elif [[ "$str" == "html" ]]; then
           docker run \
-          --volume $(pwd):/Repo \
+          --volume $(pwd):/repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
           aquasec/trivy:latest fs \
           -f template \
           --template "@contrib/html.tpl" \
           -o /reports/Trivy-Report-$(environment_tag).xml \
-          --security-checks vuln \
-          --severity LOW,MEDIUM,HIGH,CRITICAL
+          --list-all-pkgs \
+          --dependency-tree \
+          --security-checks vuln,config,secret,license \
+          --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
+          --vuln-type os,library \
+          --license-full \
+          /repo
 
         elif [[ "$str" == "json" ]]; then
           docker run \
-          --volume $(pwd):/Repo \
+          --volume $(pwd):/repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
           aquasec/trivy:latest fs \
           -f $str \
           -o /reports/Trivy-Report-$(environment_tag).json \
-          --security-checks vuln \
-          --severity LOW,MEDIUM,HIGH,CRITICAL
+          --list-all-pkgs \
+          --dependency-tree \
+          --security-checks vuln,config,secret,license \
+          --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
+          --vuln-type os,library \
+          --license-full \
+          /repo
 
         elif [[ "$str" == "junit" ]]; then
           docker run \
-          --volume $(pwd):/Repo \
+          --volume $(pwd):/repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
           aquasec/trivy:latest fs \
           -f template \
           --template "@contrib/junit.tpl" \
           -o /reports/Trivy-Report-$(environment_tag).xml \
-          --security-checks vuln \
-          --severity LOW,MEDIUM,HIGH,CRITICAL
+          --list-all-pkgs \
+          --dependency-tree \
+          --security-checks vuln,config,secret,license \
+          --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
+          --vuln-type os,library \
+          --license-full \
+          /repo
 
         elif [[ "$str" == "sarif" ]]; then
           docker run \
-          --volume $(pwd):/Repo \
+          --volume $(pwd):/repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
           aquasec/trivy:latest fs \
           -f $str \
           -o /reports/Trivy-Report-$(environment_tag).sarif \
-          --security-checks vuln \
-          --severity LOW,MEDIUM,HIGH,CRITICAL
+          --list-all-pkgs \
+          --dependency-tree \
+          --security-checks vuln,config,secret,license \
+          --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
+          --vuln-type os,library \
+          --license-full \
+          /repo
           
         elif [[ "$str" == "screen" ]]; then
           docker run \
-          --volume $(pwd):/Repo \     
+          --volume $(pwd):/repo \     
           aquasec/trivy:latest fs \
-          --security-checks vuln \
-          --severity LOW,MEDIUM,HIGH,CRITICAL
+          --list-all-pkgs \
+          --dependency-tree \
+          --security-checks vuln,config,secret,license \
+          --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
+          --vuln-type os,library \
+          --license-full \
+          /repo
 
         elif [[ "$str" == "table" ]]; then
           docker run \
-          --volume $(pwd):/Repo \
+          --volume $(pwd):/repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
           aquasec/trivy:latest fs \
           -f $str \
           -o /reports/Trivy-Report-table-$(environment_tag).txt \
-          --security-checks vuln \
-          --severity LOW,MEDIUM,HIGH,CRITICAL
+          --list-all-pkgs \
+          --dependency-tree \
+          --security-checks vuln,config,secret,license \
+          --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
+          --vuln-type os,library \
+          --license-full \
+          /repo
           
       else
           echo "output type not known"

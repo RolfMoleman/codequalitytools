@@ -29,12 +29,12 @@ trigger:
 
 stages:
   ## Lightweight scanning tool that will scan multiple languages. Auto-fixing can be enabled with purchase of bridgecrew and or Prismacloud
-  - stage: dev_checkov
+  - stage: checkov
     condition: succeededOrFailed()
     dependsOn:
     displayName: "run checkov on dev"
     jobs:
-      - job: dev_checkov_provisioning
+      - job: checkov
         timeoutInMinutes: 0
         variables:
           - name: system.debug
@@ -44,7 +44,7 @@ stages:
           - template: iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
-        displayName: "dev"
+        displayName: "Checkov"
         pool:
           vmImage: "ubuntu-latest"
         steps:
@@ -65,19 +65,19 @@ stages:
 #          - template: iac_templates/variables.yml
 #            parameters:
 #              environmentTag: "dev"
-#        displayName: "dev"
+#        displayName: "dependabot"
 #        pool:
 #          vmImage: "ubuntu-latest"
 #        steps:
 #          - template: code_quality_templates/dependabot.yml
 
   ## Infracost shows cloud cost estimates for Terraform.
-  - stage: dev_infracost
+  - stage: infracost
     condition: succeededOrFailed()
     dependsOn:
     displayName: "run infracost on dev"
     jobs:
-      - job: dev_infracost_provisioning
+      - job: infracost
         timeoutInMinutes: 0
         variables:
           - name: system.debug
@@ -87,7 +87,7 @@ stages:
           - template: iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
-        displayName: "dev"
+        displayName: "Infracost"
         pool:
           vmImage: "ubuntu-latest"
         steps:
@@ -96,12 +96,12 @@ stages:
           - template: code_quality_templates/infracost.yml
 
   ## Lightweight scanning tool by Checkmarx that is very easy to setup and run
-  - stage: dev_kics
+  - stage: kics
     condition: succeededOrFailed()
     dependsOn:
     displayName: "run kics on dev"
     jobs:
-      - job: dev_kics_provisioning
+      - job: kics
         timeoutInMinutes: 0
         variables:
           - name: system.debug
@@ -111,7 +111,7 @@ stages:
           - template: iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
-        displayName: "dev"
+        displayName: "KICS"
         pool:
           vmImage: "ubuntu-latest"
         steps:
@@ -120,12 +120,12 @@ stages:
           - template: code_quality_templates/checkmarx_kics.yml
 
    ## Bit slow but lints everything and has an auto-fix option
-  - stage: dev_megalinter
+  - stage: megalinter
     condition: succeededOrFailed()
     dependsOn:
     displayName: "run MegaLinter on dev"
     jobs:
-      - job: dev_megalinter_provisioning
+      - job: megalinter
         timeoutInMinutes: 0
         variables:
           - name: system.debug
@@ -135,7 +135,7 @@ stages:
           - template: iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
-        displayName: "dev"
+        displayName: "Megalinter"
         pool:
           vmImage: "ubuntu-latest"
         steps:
@@ -144,12 +144,12 @@ stages:
           - template: code_quality_templates/mega_linter.yml
 
   ## Software composition Analysis tool
-  - stage: dev_sonar
+  - stage: sonar
     condition: succeededOrFailed()
     dependsOn:
     displayName: "run Sonar Cloud on dev"
     jobs:
-      - job: dev_sonar_provisioning
+      - job: sonar
         timeoutInMinutes: 0
         variables:
           - name: system.debug
@@ -159,7 +159,7 @@ stages:
           - template: iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
-        displayName: "dev"
+        displayName: "Sonar Cloud"
         pool:
           vmImage: "ubuntu-latest"
         steps:
@@ -168,12 +168,12 @@ stages:
           - template: code_quality_templates/sonar_cloud.yml
 
   ## Lightweight scanning tool that will scan multiple languages
-  - stage: dev_terrascan
+  - stage: terrascan
     condition: succeededOrFailed()
     dependsOn:
-    displayName: "run terrascan on dev"
+    displayName: "run Terrascan on dev"
     jobs:
-      - job: dev_terrascan_provisioning
+      - job: terrascan
         timeoutInMinutes: 0
         variables:
           - name: system.debug
@@ -183,7 +183,7 @@ stages:
           - template: iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
-        displayName: "dev"
+        displayName: "Terrascan"
         pool:
           vmImage: "ubuntu-latest"
         steps:
@@ -192,12 +192,12 @@ stages:
           - template: code_quality_templates/terrascan.yml
 
   ## Lightweight terraform linter
-  - stage: dev_tflint
+  - stage: tflint
     condition: succeededOrFailed()
     dependsOn:
     displayName: "run tflint on dev"
     jobs:
-      - job: dev_tflint_provisioning
+      - job: tflint
         timeoutInMinutes: 0
         variables:
           - name: system.debug
@@ -207,7 +207,7 @@ stages:
           - template: iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
-        displayName: "dev"
+        displayName: "TFLint"
         pool:
           vmImage: "ubuntu-latest"
         steps:
@@ -216,12 +216,12 @@ stages:
           - template: code_quality_templates/tflint.yml
 
   ## Lightweight scanning tool that is very easy to setup and run both via pipeline and locally
-  - stage: dev_tfsec
+  - stage: tfsec
     condition: succeededOrFailed()
     dependsOn:
     displayName: "run tfsec on dev"
     jobs:
-      - job: dev_tfsec_provisioning
+      - job: tfsec
         timeoutInMinutes: 0
         variables:
           - name: system.debug
@@ -231,7 +231,7 @@ stages:
           - template: iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
-        displayName: "dev"
+        displayName: "TFSec"
         pool:
           vmImage: "ubuntu-latest"
         steps:
@@ -240,12 +240,12 @@ stages:
           - template: code_quality_templates/tfsec.yml
             
   ## a comprehensive security scanner. It is reliable, fast, extremely easy to use, and it works wherever you need it.
-  - stage: dev_trivy
+  - stage: trivy
     condition: succeededOrFailed()
     dependsOn:
     displayName: "run Trivy on dev"
     jobs:
-      - deployment: dev_trivy_provisioning
+      - deployment: trivy
         environment: "dev-plan"
         timeoutInMinutes: 0
         variables:
@@ -254,7 +254,7 @@ stages:
           - template: iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
-        displayName: "dev"
+        displayName: "Trivy"
         pool:
           vmImage: "ubuntu-latest"
         strategy:
@@ -266,17 +266,17 @@ stages:
                 - template: code_quality_templates/trivy.yml
 
   ## runs a terraform plan  and outputs the plan file. this is needed for the compliance check
-  - stage: dev_plan
+  - stage: plan
     condition: succeededOrFailed()
     dependsOn:
-      - dev_checkov
-      - dev_kics
-      - dev_terrascan
-      - dev_tflint
-      - dev_tfsec
+      - checkov
+      - kics
+      - terrascan
+      - tflint
+      - tfsec
     displayName: "terraform_plan_dev"
     jobs:
-      - job: dev_env_provisioning
+      - job: env
         timeoutInMinutes: 0
         variables:
           - name: system.debug
@@ -286,7 +286,7 @@ stages:
           - template: iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
-        displayName: "dev"
+        displayName: "Terraform Plan"
         pool:
           vmImage: "ubuntu-latest"
         steps:
@@ -303,11 +303,11 @@ stages:
           - template: iac_templates/terraform_plan.yml
 
   ## needs a plan file to run
-  - stage: dev_compliance_check
+  - stage: compliance_check
     condition: succeededOrFailed()
     displayName: 'terraform_compliance_check_dev'
     jobs:
-    - job: dev_compliance_check_provisioning
+    - job: compliance_check
       timeoutInMinutes: 0
       variables:
         - name: system.debug
@@ -315,7 +315,7 @@ stages:
         - template: iac_templates/variables.yml
           parameters:
             environmentTag: 'dev'
-      displayName: 'dev'
+      displayName: 'Terraform Compliance Check'
       pool:
         vmImage: 'ubuntu-latest'
       steps:
@@ -332,11 +332,11 @@ stages:
       - template: code_quality_templates/tfcompliancecheck.yml
 
 #  # Creates backlog items for failed tests - do not enable without discussing with the product team
-#  - stage: dev_board_updater
+#  - stage: board_updater
 #    condition: succeededOrFailed()
 #    displayName: 'board_updater_dev'
 #    jobs:
-#    - job: dev_env_provisioning
+#    - job: board_updater
 #      timeoutInMinutes: 0
 #      variables:
 #        - name: system.debug
@@ -344,7 +344,7 @@ stages:
 #        - template: iac_templates/variables.yml
 #          parameters:
 #            environmentTag: 'dev'
-#      displayName: 'dev'
+#      displayName: 'Board Updater'
 #      pool:
 #        vmImage: 'ubuntu-latest'
 #      steps:

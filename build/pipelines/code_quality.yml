@@ -28,15 +28,13 @@ trigger:
       - "*"
 
 stages:
-
   ## Automated dependency updater
-  - stage: dev_dependabot
+  - stage: dependabot
     condition: succeededOrFailed()
     dependsOn:
     displayName: "run dependabot"
-    jobs:
-      - deployment: dev_dependabot_provisioning
-        environment: "dev-plan"
+    jobs: 
+      - job: dependabot
         timeoutInMinutes: 0
         variables:
           - name: system.debug
@@ -46,25 +44,21 @@ stages:
           - template: iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
-        displayName: "dev"
+        displayName: "dependabot"
         pool:
           vmImage: "ubuntu-latest"
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - checkout: self
-                  persistCredentials: true
-                - template: code_quality_templates/dependabot.yml
+        steps:
+          - checkout: self
+            persistCredentials: true
+          - template: code_quality_templates/dependabot.yml
 
   ## Bit slow but lints everything and has an auto-fix option
-  - stage: dev_megalinter
+  - stage: megalinter
     condition: succeededOrFailed()
     dependsOn:
-    displayName: "run MegaLinter on dev"
-    jobs:
-      - deployment: dev_megalinter_provisioning
-        environment: "dev-plan"
+    displayName: "run MegaLinter"
+    jobs: 
+      - job: megalinter
         timeoutInMinutes: 0
         variables:
           - name: system.debug
@@ -74,25 +68,21 @@ stages:
           - template: iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
-        displayName: "dev"
+        displayName: "MegaLinter"
         pool:
           vmImage: "ubuntu-latest"
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - checkout: self
-                  persistCredentials: true
-                - template: code_quality_templates/mega_linter.yml
+        steps:
+          - checkout: self
+            persistCredentials: true
+          - template: code_quality_templates/mega_linter.yml
 
   ## Open source software composition Analysis tool
-  - stage: dev_mend
+  - stage: mend
     condition: succeededOrFailed()
     dependsOn:
-    displayName: "run Mend Bolt on dev"
-    jobs:
-      - deployment: dev_mend_provisioning
-        environment: "dev-plan"
+    displayName: "run Mend Bolt"
+    jobs: 
+      - job: mend
         timeoutInMinutes: 0
         variables:
           - name: system.debug
@@ -102,25 +92,21 @@ stages:
           - template: iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
-        displayName: "dev"
+        displayName: "Mend Bolt"
         pool:
           vmImage: "ubuntu-latest"
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - checkout: self
-                  persistCredentials: true
-                - template: code_quality_templates/mend_bolt.yml
+        steps:
+          - checkout: self
+            persistCredentials: true
+          - template: code_quality_templates/mend_bolt.yml
 
   ## Open source software composition Analysis tool
-  - stage: dev_owasp
+  - stage: owasp
     condition: succeededOrFailed()
     dependsOn:
-    displayName: "run owasp on dev"
-    jobs:
-      - deployment: dev_owasp_provisioning
-        environment: "dev-plan"
+    displayName: "run owasp"
+    jobs: 
+      - job: owasp
         timeoutInMinutes: 0
         variables:
           - name: system.debug
@@ -130,25 +116,21 @@ stages:
           - template: iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
-        displayName: "dev"
+        displayName: "owasp"
         pool:
           vmImage: "ubuntu-latest"
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - checkout: self
-                  persistCredentials: true
-                - template: code_quality_templates/owasp.yml
+        steps:
+          - checkout: self
+            persistCredentials: true
+          - template: code_quality_templates/owasp.yml
 
   ## Software composition Analysis tool
-  - stage: dev_sonar
+  - stage: sonar
     condition: succeededOrFailed()
     dependsOn:
-    displayName: "run Sonar Cloud on dev"
-    jobs:
-      - deployment: dev_sonar_provisioning
-        environment: "dev-plan"
+    displayName: "run Sonar Cloud"
+    jobs: 
+      - job: sonar
         timeoutInMinutes: 0
         variables:
           - name: system.debug
@@ -158,25 +140,21 @@ stages:
           - template: iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
-        displayName: "dev"
+        displayName: "Sonar Cloud"
         pool:
           vmImage: "ubuntu-latest"
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - checkout: self
-                  persistCredentials: true
-                - template: code_quality_templates/sonar_cloud.yml
+        steps:
+          - checkout: self
+            persistCredentials: true
+          - template: code_quality_templates/sonar_cloud.yml
 
   ## a comprehensive security scanner. It is reliable, fast, extremely easy to use, and it works wherever you need it.
-  - stage: dev_trivy
+  - stage: trivy
     condition: succeededOrFailed()
     dependsOn:
-    displayName: "run Trivy on dev"
-    jobs:
-      - deployment: dev_trivy_provisioning
-        environment: "dev-plan"
+    displayName: "run Trivy"
+    jobs: 
+      - job: trivy
         timeoutInMinutes: 0
         variables:
           - name: system.debug
@@ -184,25 +162,20 @@ stages:
           - template: iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
-        displayName: "dev"
+        displayName: "Trivy"
         pool:
           vmImage: "ubuntu-latest"
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - checkout: self
-                  persistCredentials: true
-                - template: code_quality_templates/trivy.yml
+        steps:
+          - checkout: self
+            persistCredentials: true
+          - template: code_quality_templates/trivy.yml
                   
-
-
 #  # Creates backlog items for failed tests - do not enable without discussing with the product team
-#  - stage: dev_board_updater
+#  - stage: board_updater
 #    condition: succeededOrFailed()
 #    displayName: 'board_updater_dev'
 #    jobs:
-#    - deployment: dev_env_provisioning
+#    - deployment: env
 #      environment: 'dev-plan'
 #      timeoutInMinutes: 0
 #      variables:
