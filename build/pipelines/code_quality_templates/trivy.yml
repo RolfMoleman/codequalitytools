@@ -29,103 +29,104 @@ steps:
           docker run \
           --volume $(pwd):/repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
-          aquasec/trivy:latest fs \
-          -o /reports/Trivy-Report-$(environment_tag).txt \
+          --volume /var/run/docker.sock:/var/run/docker.sock \
+          aquasec/trivy:latest filesystem \
+          --output /reports/Trivy-Report-$(environment_tag).txt \
           --list-all-pkgs \
-          --dependency-tree \
           --security-checks vuln,config,secret,license \
           --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
           --vuln-type os,library \
-          --license-full \
+          --license--full \
           /repo
 
         elif [[ "$str" == "html" ]]; then
           docker run \
           --volume $(pwd):/repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
-          aquasec/trivy:latest fs \
-          -f template \
+          --volume /var/run/docker.sock:/var/run/docker.sock \
+          aquasec/trivy:latest filesystem \
+          --format template \
           --template "@contrib/html.tpl" \
-          -o /reports/Trivy-Report-$(environment_tag).xml \
+          --output /reports/Trivy-Report-$(environment_tag).xml \
           --list-all-pkgs \
-          --dependency-tree \
+
           --security-checks vuln,config,secret,license \
           --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
           --vuln-type os,library \
-          --license-full \
+          --license--full \
           /repo
 
         elif [[ "$str" == "json" ]]; then
           docker run \
           --volume $(pwd):/repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
-          aquasec/trivy:latest fs \
-          -f $str \
-          -o /reports/Trivy-Report-$(environment_tag).json \
+          --volume /var/run/docker.sock:/var/run/docker.sock \
+          aquasec/trivy:latest filesystem \
+          --format $str \
+          --output /reports/Trivy-Report-$(environment_tag).json \
           --list-all-pkgs \
-          --dependency-tree \
+
           --security-checks vuln,config,secret,license \
           --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
           --vuln-type os,library \
-          --license-full \
+          --license--full \
           /repo
 
         elif [[ "$str" == "junit" ]]; then
           docker run \
           --volume $(pwd):/repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
-          aquasec/trivy:latest fs \
-          -f template \
+          --volume /var/run/docker.sock:/var/run/docker.sock \
+          aquasec/trivy:latest filesystem \
+          --format template \
           --template "@contrib/junit.tpl" \
-          -o /reports/Trivy-Report-$(environment_tag).xml \
+          --output /reports/Trivy-Report-$(environment_tag).xml \
           --list-all-pkgs \
-          --dependency-tree \
           --security-checks vuln,config,secret,license \
           --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
           --vuln-type os,library \
-          --license-full \
+          --license--full \
           /repo
 
         elif [[ "$str" == "sarif" ]]; then
           docker run \
           --volume $(pwd):/repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
-          aquasec/trivy:latest fs \
-          -f $str \
-          -o /reports/Trivy-Report-$(environment_tag).sarif \
+          --volume /var/run/docker.sock:/var/run/docker.sock \
+          aquasec/trivy:latest filesystem \
+          --format $str \
+          --output /reports/Trivy-Report-$(environment_tag).sarif \
           --list-all-pkgs \
-          --dependency-tree \
           --security-checks vuln,config,secret,license \
           --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
           --vuln-type os,library \
-          --license-full \
+          --license--full \
           /repo
           
         elif [[ "$str" == "screen" ]]; then
           docker run \
           --volume $(pwd):/repo \     
-          aquasec/trivy:latest fs \
+          aquasec/trivy:latest filesystem \
           --list-all-pkgs \
-          --dependency-tree \
           --security-checks vuln,config,secret,license \
           --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
           --vuln-type os,library \
-          --license-full \
+          --license--full \
           /repo
 
         elif [[ "$str" == "table" ]]; then
           docker run \
           --volume $(pwd):/repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
-          aquasec/trivy:latest fs \
-          -f $str \
-          -o /reports/Trivy-Report-table-$(environment_tag).txt \
+          --volume /var/run/docker.sock:/var/run/docker.sock \
+          aquasec/trivy:latest filesystem \
+          --format $str \
+          --output /reports/Trivy-Report-table-$(environment_tag).txt \
           --list-all-pkgs \
-          --dependency-tree \
           --security-checks vuln,config,secret,license \
           --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
           --vuln-type os,library \
-          --license-full \
+          --license--full \
           /repo
           
       else
@@ -142,13 +143,13 @@ steps:
       Write-Host ("##vso[task.setvariable variable=task.Trivy_Scan.status]failure")             
     condition: failed()
     continueOnError: true
-    displayName: Trivy failiure check
+    displayName: Trivy failure check
     enabled: true
     name: "if_trivyfail"
 
   - script: |
       mkdir -p $(Pipeline.Workspace)/docker
-      docker save -o $(Pipeline.Workspace)/docker/cache.tar aquasec/trivy:latest              
+      docker save --output $(Pipeline.Workspace)/docker/cache.tar aquasec/trivy:latest              
     condition: and(not(canceled()), or(failed(), ne(variables.DOCKER_CACHE_HIT, 'true')))
     continueOnError: true
     displayName: Save Docker image
@@ -225,11 +226,11 @@ steps:
         {
           if($file.extension.Contains("sarif"))
           {
-              Copy-Item -Path $file.FullName -Destination sarif -Force
+              Copy-Item -Path $file.FullName -Destination sarif --formatorce
           }
           else
           {
-              Write-output $file.FullName "does not need moving"
+              Write--outpututput $file.FullName "does not need moving"
           }      
         }
       showWarnings: true
@@ -264,7 +265,7 @@ steps:
 
   # Clean up any of the containers / images that were used for quality checks
   - bash: |
-      docker rmi "aquasec/trivy:latest" -f | true
+      docker rmi "aquasec/trivy:latest" --format | true
     condition: succeededOrFailed()
     displayName: "Remove terraform Quality Check Docker Images"
     enabled: true

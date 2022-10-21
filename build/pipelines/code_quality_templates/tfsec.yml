@@ -20,15 +20,6 @@ steps:
     enabled: true
     name: "load_dockercache"
 
-  - script: |
-      mkdir -p $(Pipeline.Workspace)/docker
-      docker pull -q aquasec/tfsec:latest
-      docker save -o $(Pipeline.Workspace)/docker/cache.tar aquasec/tfsec:latest
-    condition: and(not(canceled()), or(failed(), ne(variables.DOCKER_CACHE_HIT, 'true')))
-    displayName: Save Docker image
-    enabled: true
-    name: "save_dockerimage"  
-
   - bash: |
       mkdir TFSecReport
       chmod a+w TFSecReport
@@ -51,9 +42,26 @@ steps:
     name: "TFSec_Scan"
     workingDirectory: "$(System.DefaultWorkingDirectory)"
 
+  - script: |
+      Write-Host ("##vso[task.setvariable variable=task.Tfsec_Scan.status]failure")             
+    condition: failed()
+    continueOnError: true
+    displayName: Tfsec failure check
+    enabled: true
+    name: "if_tfsecfail"
+
+  - script: |
+      mkdir -p $(Pipeline.Workspace)/docker
+      docker pull -q aquasec/tfsec:latest
+      docker save -o $(Pipeline.Workspace)/docker/cache.tar aquasec/tfsec:latest
+    condition: and(not(canceled()), or(failed(), ne(variables.DOCKER_CACHE_HIT, 'true')))
+    displayName: Save Docker image
+    enabled: true
+    name: "save_dockerimage"  
+
   # Create work items to review failures
   - task: CreateWorkItem@1
-    condition: failed()
+    condition: and(eq(variables['task.Tfsec_Scan.status'], 'failure'), succeededOrFailed())
     displayName: "Create work item"
     enabled: true
     inputs:
@@ -81,21 +89,20 @@ steps:
       attachmentsFolder: "$(System.DefaultWorkingDirectory)/TFSecReport/" # Optional
       attachments: "*.*" # Required if addAttachments = true
       # ===== Duplicate Inputs =====
-      #preventDuplicates: false # Optional
-      #keyFields: # Required if preventDuplicates = true
-      #updateDuplicates: false # Optional
-      #updateRules: # Optional
-      # ===== Outputs Inputs =====
-      #createOutputs: false # Optional
-      #outputVariables: # Required if createOutputs = true
-      # ===== Advanced Inputs =====
-      #authToken: #Optional
-      #allowRedirectDowngrade: false # Optional
       preventDuplicates: true
       keyFields: |
         System.AreaPath
         System.IterationPath
         System.Title 
+      #updateDuplicates: false # Optional
+      #updateRules: # Optional
+      # ===== Outputs Inputs =====
+      createOutputs: true # Optional
+      outputVariables: 'workItemId=ID' # Required if createOutputs = true
+      # ===== Advanced Inputs =====
+      #authToken: #Optional
+      #allowRedirectDowngrade: false # Optional
+      
 
   # Publish the TFSec report as an artifact to Azure Pipelines
   - task: PublishBuildArtifacts@1
