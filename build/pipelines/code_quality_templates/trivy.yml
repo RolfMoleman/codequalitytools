@@ -224,11 +224,11 @@ steps:
         {
           if($file.extension.Contains("sarif"))
           {
-              Copy-Item -Path $file.FullName -Destination sarif --formatorce
+              Copy-Item -Path $file.FullName -Destination sarif -force
           }
           else
           {
-              Write--outpututput $file.FullName "does not need moving"
+              Write-output $file.FullName "does not need moving"
           }      
         }
       showWarnings: true
