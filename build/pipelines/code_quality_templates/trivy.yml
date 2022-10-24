@@ -36,7 +36,7 @@ steps:
           --security-checks vuln,config,secret,license \
           --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
           --vuln-type os,library \
-          --license--full \
+          --license-full \
           /repo
 
         elif [[ "$str" == "html" ]]; then
@@ -52,7 +52,7 @@ steps:
           --security-checks vuln,config,secret,license \
           --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
           --vuln-type os,library \
-          --license--full \
+          --license-full \
           /repo
 
         elif [[ "$str" == "json" ]]; then
@@ -67,7 +67,7 @@ steps:
           --security-checks vuln,config,secret,license \
           --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
           --vuln-type os,library \
-          --license--full \
+          --license-full \
           /repo
 
         elif [[ "$str" == "junit" ]]; then
@@ -83,7 +83,7 @@ steps:
           --security-checks vuln,config,secret,license \
           --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
           --vuln-type os,library \
-          --license--full \
+          --license-full \
           /repo
 
         elif [[ "$str" == "sarif" ]]; then
@@ -98,7 +98,7 @@ steps:
           --security-checks vuln,config,secret,license \
           --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
           --vuln-type os,library \
-          --license--full \
+          --license-full \
           /repo
           
         elif [[ "$str" == "screen" ]]; then
@@ -109,7 +109,7 @@ steps:
           --security-checks vuln,config,secret,license \
           --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
           --vuln-type os,library \
-          --license--full \
+          --license-full \
           /repo
 
         elif [[ "$str" == "table" ]]; then
@@ -124,7 +124,7 @@ steps:
           --security-checks vuln,config,secret,license \
           --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
           --vuln-type os,library \
-          --license--full \
+          --license-full \
           /repo
           
       else
