@@ -65,20 +65,21 @@ steps:
       for str in ${outputTypes[@]}; do
         
         if [[ "$str" == "default" ]]; then
+        echo "Performing Trivy scan with output type of: ${str} "
           docker run \
           --volume $(pwd):/repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
           --volume /var/run/docker.sock:/var/run/docker.sock \
           aquasec/trivy:latest filesystem \
           --output /reports/Trivy-Report-$(environment_tag).txt \
-          --list-all-pkgs \
           --security-checks vuln,config,secret,license \
           --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
           --vuln-type os,library \
-          --license--full \
+          --license-full \
           /repo
 
         elif [[ "$str" == "html" ]]; then
+          echo "Performing Trivy scan with output type of: ${str} "
           docker run \
           --volume $(pwd):/repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
@@ -88,14 +89,14 @@ steps:
           --template "@contrib/html.tpl" \
           --output /reports/Trivy-Report-$(environment_tag).xml \
           --list-all-pkgs \
-
           --security-checks vuln,config,secret,license \
           --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
           --vuln-type os,library \
-          --license--full \
+          --license-full \
           /repo
 
         elif [[ "$str" == "json" ]]; then
+          echo "Performing Trivy scan with output type of: ${str} "
           docker run \
           --volume $(pwd):/repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
@@ -104,14 +105,14 @@ steps:
           --format $str \
           --output /reports/Trivy-Report-$(environment_tag).json \
           --list-all-pkgs \
-
           --security-checks vuln,config,secret,license \
           --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
           --vuln-type os,library \
-          --license--full \
+          --license-full \
           /repo
 
         elif [[ "$str" == "junit" ]]; then
+          echo "Performing Trivy scan with output type of: ${str} "
           docker run \
           --volume $(pwd):/repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
@@ -124,10 +125,11 @@ steps:
           --security-checks vuln,config,secret,license \
           --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
           --vuln-type os,library \
-          --license--full \
+          --license-full \
           /repo
 
         elif [[ "$str" == "sarif" ]]; then
+          echo "Performing Trivy scan with output type of: ${str} "
           docker run \
           --volume $(pwd):/repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
@@ -139,21 +141,24 @@ steps:
           --security-checks vuln,config,secret,license \
           --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
           --vuln-type os,library \
-          --license--full \
+          --license-full \
           /repo
           
         elif [[ "$str" == "screen" ]]; then
+          echo "Performing Trivy scan with output type of: ${str} "
           docker run \
-          --volume $(pwd):/repo \     
+          --volume $(pwd):/repo \
+          --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
+          --volume /var/run/docker.sock:/var/run/docker.sock \
           aquasec/trivy:latest filesystem \
-          --list-all-pkgs \
           --security-checks vuln,config,secret,license \
           --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
           --vuln-type os,library \
-          --license--full \
+          --license-full \
           /repo
 
         elif [[ "$str" == "table" ]]; then
+          echo "Performing Trivy scan with output type of: ${str} "
           docker run \
           --volume $(pwd):/repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
@@ -161,11 +166,10 @@ steps:
           aquasec/trivy:latest filesystem \
           --format $str \
           --output /reports/Trivy-Report-table-$(environment_tag).txt \
-          --list-all-pkgs \
           --security-checks vuln,config,secret,license \
           --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
           --vuln-type os,library \
-          --license--full \
+          --license-full \
           /repo
           
       else
@@ -265,11 +269,11 @@ steps:
         {
           if($file.extension.Contains("sarif"))
           {
-              Copy-Item -Path $file.FullName -Destination sarif --formatorce
+              Copy-Item -Path $file.FullName -Destination sarif -force
           }
           else
           {
-              Write--outpututput $file.FullName "does not need moving"
+              Write-output $file.FullName "does not need moving"
           }      
         }
       showWarnings: true

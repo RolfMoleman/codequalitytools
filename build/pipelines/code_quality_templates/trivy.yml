@@ -26,13 +26,13 @@ steps:
       for str in ${outputTypes[@]}; do
         
         if [[ "$str" == "default" ]]; then
+        echo "Performing Trivy scan with output type of: ${str} "
           docker run \
           --volume $(pwd):/repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
           --volume /var/run/docker.sock:/var/run/docker.sock \
           aquasec/trivy:latest filesystem \
           --output /reports/Trivy-Report-$(environment_tag).txt \
-          --list-all-pkgs \
           --security-checks vuln,config,secret,license \
           --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
           --vuln-type os,library \
@@ -40,6 +40,7 @@ steps:
           /repo
 
         elif [[ "$str" == "html" ]]; then
+          echo "Performing Trivy scan with output type of: ${str} "
           docker run \
           --volume $(pwd):/repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
@@ -56,6 +57,7 @@ steps:
           /repo
 
         elif [[ "$str" == "json" ]]; then
+          echo "Performing Trivy scan with output type of: ${str} "
           docker run \
           --volume $(pwd):/repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
@@ -71,6 +73,7 @@ steps:
           /repo
 
         elif [[ "$str" == "junit" ]]; then
+          echo "Performing Trivy scan with output type of: ${str} "
           docker run \
           --volume $(pwd):/repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
@@ -87,6 +90,7 @@ steps:
           /repo
 
         elif [[ "$str" == "sarif" ]]; then
+          echo "Performing Trivy scan with output type of: ${str} "
           docker run \
           --volume $(pwd):/repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
@@ -102,10 +106,12 @@ steps:
           /repo
           
         elif [[ "$str" == "screen" ]]; then
+          echo "Performing Trivy scan with output type of: ${str} "
           docker run \
-          --volume $(pwd):/repo \     
+          --volume $(pwd):/repo \
+          --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
+          --volume /var/run/docker.sock:/var/run/docker.sock \
           aquasec/trivy:latest filesystem \
-          --list-all-pkgs \
           --security-checks vuln,config,secret,license \
           --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
           --vuln-type os,library \
@@ -113,6 +119,7 @@ steps:
           /repo
 
         elif [[ "$str" == "table" ]]; then
+          echo "Performing Trivy scan with output type of: ${str} "
           docker run \
           --volume $(pwd):/repo \
           --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
@@ -120,7 +127,6 @@ steps:
           aquasec/trivy:latest filesystem \
           --format $str \
           --output /reports/Trivy-Report-table-$(environment_tag).txt \
-          --list-all-pkgs \
           --security-checks vuln,config,secret,license \
           --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
           --vuln-type os,library \
