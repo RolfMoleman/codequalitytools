@@ -30,7 +30,7 @@ steps:
   - task: PowerShell@2
     displayName: Retain pipeline run
     inputs:
-      filePath: 'repo_template/build/scripts/retain-build.ps1'
+      filePath: 'repo_template/build/scripts/retain_build.ps1'
     env:
       SYSTEM_COLLECTION_URI: $(System.CollectionUri)
       SYSTEM_ACCESS_TOKEN: $(System.AccessToken)
@@ -44,7 +44,7 @@ steps:
     displayName: Retain triggered by pipeline run
     condition: ne(variables['resources.pipeline.build.runID'], '')
     inputs:
-      filePath: 'repo_template/build/scripts/retain-build.ps1'
+      filePath: 'repo_template/build/scripts/retain_build.ps1'
     env:
       SYSTEM_COLLECTION_URI: $(System.CollectionUri)
       SYSTEM_ACCESS_TOKEN: $(System.AccessToken)

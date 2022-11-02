@@ -6,6 +6,10 @@ terraform {
       version = "__azuread_provider_version__"
     }
 
+    azuredevops = {
+      source  = "microsoft/azuredevops"
+      version = "__azuredevops_provider_version__"
+    }
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "__azurerm_provider_version__"

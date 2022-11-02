@@ -370,7 +370,11 @@ _TeamCity*
 
 ### terraform plans
 
-**terraform/plan-*
+**/terraform/plan-*
+**/terraform/plan_*
+
+**/terraform_local/plan-*
+**/terraform_local/plan_*
 
 ## TFS 2012 Local Workspace
 

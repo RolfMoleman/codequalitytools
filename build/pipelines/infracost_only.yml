@@ -1,7 +1,7 @@
 ## pipeline name: repo_template - infracost ##
 name: $(Date:yy)-$(Date:MM)-$(Date:dd).$(Rev:r)
 pool:
-    vmImage: "ubuntu-latest"
+  vmImage: "ubuntu-latest"
 pr:
   branches:
     include:
@@ -11,16 +11,15 @@ pr:
       - "*"
 
 variables:
-  
   - name: system.debug
     value: true
   - name: agent.diagnostic
     value: true
-  - template: /build/pipelines/iac_templates/variables.yml
+  - template: /repo_template/build/pipelines/iac_templates/variables.yml
     parameters:
       environmentTag: "dev"
-  # If you use private modules you'll need this env variable to use 
-  # the same ssh-agent socket value across all steps. 
+  # If you use private modules you'll need this env variable to use
+  # the same ssh-agent socket value across all steps.
   - name: SSH_AUTH_SOCK
     value: /tmp/ssh_agent.sock
 
@@ -134,11 +133,11 @@ jobs:
       #   new - Create a new cost estimate comment on every push.
       # See https://www.infracost.io/docs/features/cli_commands/#comment-on-pull-requests for other options.
       - bash: |
-           infracost comment azure-repos --path=$(System.DefaultWorkingDirectory)/tmp/infracost-difference-$(environment_tag).json \
-                                         --azure-access-token=$(System.AccessToken) \
-                                         --pull-request=$(System.PullRequest.PullRequestId) \
-                                         --repo-url=$(Build.Repository.Uri) \
-                                         --behavior=update
+          infracost comment azure-repos --path=$(System.DefaultWorkingDirectory)/tmp/infracost-difference-$(environment_tag).json \
+                                        --azure-access-token=$(System.AccessToken) \
+                                        --pull-request=$(System.PullRequest.PullRequestId) \
+                                        --repo-url=$(Build.Repository.Uri) \
+                                        --behavior=update
         condition: and(succeededOrFailed(),eq(variables['Build.Reason'], 'PullRequest'))
         displayName: Post Infracost comment
         enabled: true

@@ -53,9 +53,9 @@ To get started do the following:
       5. Replace `project_title` with what you want to call the project e.g. `BCA Repository Template`
       6. Replace `project_description` with some details about the project
       7. Replace `your_name` with your name e.g. `Carl Dawson`
-      8. Replace `c11ca9cd-0fac-404b-96ff-0e4134b40645` with the id of your repo which you can get here `https://dev.azure.com/bcagroup/project_name/_apis/git/repositories/repo_name?api-version=6.0`
+      8. Replace `3f795ff4-4328-4347-80b1-3348dd374401` with the id of your repo which you can get here `https://dev.azure.com/bcagroup/project_name/_apis/git/repositories/repo_name?api-version=6.0`
 3. Add your terraform files to the `.\repo_template\build\terraform` folder
-4. In the `variables.yaml` replace `c11ca9cd-0fac-404b-96ff-0e4134b40645` with the id of your repo which you can get here `https://dev.azure.com/bcagroup/project_name/_apis/git/repositories/repo_name?api-version=6.0`
+4. In the `variables.yaml` replace `3f795ff4-4328-4347-80b1-3348dd374401` with the id of your repo which you can get here `https://dev.azure.com/bcagroup/project_name/_apis/git/repositories/repo_name?api-version=6.0`
 5. Amend the terraform variables used in `.\repo_template\build\pipelines\iac_templates\terraform_apply.yml` and `.\repo_template\build\pipelines\iac_templates\terraform_plan.yml`
 6. setup `repo_template\build\pipelines\infrastructure.yml` as a pipeline in azure devops _Note: please give it a meaningful name_
 7. setup `repo_template\build\pipelines\infrastructure_pull_request.yml` as a pipeline in azure devops _Note: please give it a meaningful name_

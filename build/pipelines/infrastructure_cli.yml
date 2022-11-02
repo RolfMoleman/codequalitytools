@@ -9,10 +9,10 @@ trigger:
       - "*"
   paths:
     include:
-      - "build/pipelines/*"
-      - "build/pipelines/code_quality_templates/*"
-      - "build/pipelines/iac_templates/*"
-      - 'build/terraform/*'
+      - "*/repo_template/build/pipelines/*"
+      - "*/repo_template/build/pipelines/code_quality_templates/*"
+      - "*/repo_template/build/pipelines/iac_templates/*"
+      - "*/build/terraform/*"
       - "terraform/*"
     exclude:
       - "*"
@@ -98,7 +98,7 @@ stages:
 
   - stage: uat_apply
     condition: succeeded('uat_plan')
-    dependsOn: 
+    dependsOn:
       - dev_apply
       - uat_plan
     displayName: "terraform_apply_uat"
@@ -126,7 +126,7 @@ stages:
   #Production
   - stage: prod_plan
     condition: succeededOrFailed()
-    dependsOn: 
+    dependsOn:
       - dev_apply
       - uat_apply
     displayName: "terraform_plan_prod"
@@ -154,7 +154,7 @@ stages:
 
   - stage: prod_apply
     condition: succeeded('prod_plan')
-    dependsOn: 
+    dependsOn:
       - dev_apply
       - uat_apply
       - prod_plan
@@ -183,7 +183,7 @@ stages:
 
   - stage: create_tag
     condition: succeeded('prod_apply')
-    dependsOn: 
+    dependsOn:
       - dev_apply
       - uat_apply
       - prod_apply
@@ -204,5 +204,5 @@ stages:
 
           - template: release_templates/create_git_tag.yml
             parameters:
-              gitTag: '$(Build.BuildNumber)_Infrastructure'
-              gitMessage: 'Infrastructure deploy'
+              gitTag: "$(Build.BuildNumber)_Infrastructure"
+              gitMessage: "Infrastructure deploy"
