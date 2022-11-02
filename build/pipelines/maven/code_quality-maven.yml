@@ -28,7 +28,6 @@ trigger:
       - "*"
 
 stages:
-
   ## maven package task required by the other stages below
   - stage: dev_maven
     condition: succeededOrFailed()
@@ -43,7 +42,7 @@ stages:
             value: true
           - name: agent.diagnostic
             value: true
-          - template: iac_templates/variables.yml
+          - template: .././../iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
         displayName: "dev"
@@ -55,7 +54,7 @@ stages:
               steps:
                 - checkout: self
                   persistCredentials: true
-                - template: build_templates/maven.yml
+                - template: ../build_templates/maven.yml
 
   ## Open source software composition Analysis tool
   - stage: dev_mend
@@ -71,7 +70,7 @@ stages:
             value: true
           - name: agent.diagnostic
             value: true
-          - template: iac_templates/variables.yml
+          - template: .././../iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
         displayName: "dev"
@@ -83,7 +82,7 @@ stages:
               steps:
                 - checkout: self
                   persistCredentials: true
-                - template: code_quality_templates/mend_bolt.yml
+                - template: ../code_quality_templates/mend_bolt.yml
 
   ## Open source software composition Analysis tool
   - stage: dev_owasp
@@ -99,7 +98,7 @@ stages:
             value: true
           - name: agent.diagnostic
             value: true
-          - template: iac_templates/variables.yml
+          - template: .././../iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
         displayName: "dev"
@@ -111,7 +110,7 @@ stages:
               steps:
                 - checkout: self
                   persistCredentials: true
-                - template: code_quality_templates/owasp.yml
+                - template: ../code_quality_templates/owasp.yml
 
   ## Software composition Analysis tool
   - stage: dev_sonar
@@ -127,7 +126,7 @@ stages:
             value: true
           - name: agent.diagnostic
             value: true
-          - template: iac_templates/variables.yml
+          - template: .././../iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
         displayName: "dev"
@@ -139,7 +138,7 @@ stages:
               steps:
                 - checkout: self
                   persistCredentials: true
-                - template: code_quality_templates/maven/sonar_cloud.yml
+                - template: ../code_quality_templates/maven/sonar_cloud.yml
 
   ## Bit slow but lints everything and has an auto-fix option
   - stage: dev_megalinter
@@ -155,7 +154,7 @@ stages:
             value: true
           - name: agent.diagnostic
             value: true
-          - template: iac_templates/variables.yml
+          - template: .././../iac_templates/variables.yml
             parameters:
               environmentTag: "dev"
         displayName: "dev"
@@ -167,8 +166,7 @@ stages:
               steps:
                 - checkout: self
                   persistCredentials: true
-                - template: code_quality_templates/mega_linter.yml
-
+                - template: ../code_quality_templates/mega_linter.yml
 #  # Creates backlog items for failed tests - do not enable without discussing with the product team
 #  - stage: dev_board_updater
 #    condition: succeededOrFailed()
@@ -180,7 +178,7 @@ stages:
 #      variables:
 #        - name: system.debug
 #          value: true
-#        - template: iac_templates/variables.yml
+#        - template: .././../iac_templates/variables.yml
 #          parameters:
 #            environmentTag: 'dev'
 #      displayName: 'dev'
