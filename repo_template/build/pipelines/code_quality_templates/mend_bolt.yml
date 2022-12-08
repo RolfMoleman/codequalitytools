@@ -1,0 +1,9 @@
+### depending on  your code language, you may need a build step to compile your code before using mend bolt.
+steps:
+  - task: WhiteSource@21
+    condition: succeededOrFailed()
+    displayName: "Run Mend Bolt"
+    enabled: true
+    inputs:
+      cwd: "$(System.DefaultWorkingDirectory)"
+      projectName: "$(project_repo)"

@@ -1,0 +1,198 @@
+##
+## Run compliance checks on all PR builds
+## Also run on all normal builds that aren't on the development or master/main branches
+##
+name: $(Date:yy)-$(Date:MM)-$(Date:dd).$(Rev:r)
+pr:
+  branches:
+    include:
+      - "*"
+  paths:
+    include:
+      - "*"
+trigger:
+  batch: false
+  branches:
+    include:
+      - "*"
+    exclude:
+      #remove/comment out any branches that aren't relevant.
+      #Note: it is nice to keep development branches under a development folder and get developers to keep their own branches under a folder with their name to keep the branch view clean
+      - main
+      - master
+      - development/development
+      - development
+      - dev
+  paths:
+    include:
+      - "*"
+
+stages:
+  ## maven package task required by the other stages below
+  - stage: dev_maven
+    condition: succeededOrFailed()
+    dependsOn:
+    displayName: "run Maven build"
+    jobs:
+      - deployment: dev_maven_provisioning
+        environment: "dev-plan"
+        timeoutInMinutes: 0
+        variables:
+          - name: system.debug
+            value: true
+          - name: agent.diagnostic
+            value: true
+          - template: .././../iac_templates/variables.yml
+            parameters:
+              environmentTag: "dev"
+        displayName: "dev"
+        pool:
+          vmImage: "ubuntu-latest"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                  persistCredentials: true
+                - template: ../build_templates/maven.yml
+
+  ## Open source software composition Analysis tool
+  - stage: dev_mend
+    condition: succeededOrFailed()
+    dependsOn: dev_maven
+    displayName: "run Mend Bolt on dev"
+    jobs:
+      - deployment: dev_mend_provisioning
+        environment: "dev-plan"
+        timeoutInMinutes: 0
+        variables:
+          - name: system.debug
+            value: true
+          - name: agent.diagnostic
+            value: true
+          - template: .././../iac_templates/variables.yml
+            parameters:
+              environmentTag: "dev"
+        displayName: "dev"
+        pool:
+          vmImage: "ubuntu-latest"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                  persistCredentials: true
+                - template: ../code_quality_templates/mend_bolt.yml
+
+  ## Open source software composition Analysis tool
+  - stage: dev_owasp
+    condition: succeededOrFailed()
+    dependsOn: dev_maven
+    displayName: "run owasp on dev"
+    jobs:
+      - deployment: dev_owasp_provisioning
+        environment: "dev-plan"
+        timeoutInMinutes: 0
+        variables:
+          - name: system.debug
+            value: true
+          - name: agent.diagnostic
+            value: true
+          - template: .././../iac_templates/variables.yml
+            parameters:
+              environmentTag: "dev"
+        displayName: "dev"
+        pool:
+          vmImage: "ubuntu-latest"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                  persistCredentials: true
+                - template: ../code_quality_templates/owasp.yml
+
+  ## Software composition Analysis tool
+  - stage: dev_sonar
+    condition: succeededOrFailed()
+    dependsOn: dev_maven
+    displayName: "run Sonar Cloud on dev"
+    jobs:
+      - deployment: dev_sonar_provisioning
+        environment: "dev-plan"
+        timeoutInMinutes: 0
+        variables:
+          - name: system.debug
+            value: true
+          - name: agent.diagnostic
+            value: true
+          - template: .././../iac_templates/variables.yml
+            parameters:
+              environmentTag: "dev"
+        displayName: "dev"
+        pool:
+          vmImage: "ubuntu-latest"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                  persistCredentials: true
+                - template: ../code_quality_templates/maven/sonar_cloud.yml
+
+  ## Bit slow but lints everything and has an auto-fix option
+  - stage: dev_megalinter
+    condition: succeededOrFailed()
+    dependsOn: dev_maven
+    displayName: "run MegaLinter on dev"
+    jobs:
+      - deployment: dev_megalinter_provisioning
+        environment: "dev-plan"
+        timeoutInMinutes: 0
+        variables:
+          - name: system.debug
+            value: true
+          - name: agent.diagnostic
+            value: true
+          - template: .././../iac_templates/variables.yml
+            parameters:
+              environmentTag: "dev"
+        displayName: "dev"
+        pool:
+          vmImage: "ubuntu-latest"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                  persistCredentials: true
+                - template: ../code_quality_templates/mega_linter.yml
+#  # Creates backlog items for failed tests - do not enable without discussing with the product team
+#  - stage: dev_board_updater
+#    condition: succeededOrFailed()
+#    displayName: 'board_updater_dev'
+#    jobs:
+#    - deployment: dev_env_provisioning
+#      environment: 'dev-plan'
+#      timeoutInMinutes: 0
+#      variables:
+#        - name: system.debug
+#          value: true
+#        - template: .././../iac_templates/variables.yml
+#          parameters:
+#            environmentTag: 'dev'
+#      displayName: 'dev'
+#      pool:
+#        vmImage: 'ubuntu-latest'
+#      strategy:
+#        runOnce:
+#          deploy:
+#            steps:
+#            - checkout: self
+#              persistCredentials: true
+#            - task: WorkItemUpdater@2
+#              inputs:
+#                workitemsSource: 'Build'
+#                workItemType: 'Task,Bug'
+#                updateAssignedTo: 'Never'
+#                updateFields: 'Microsoft.VSTS.Build.IntegrationBuild,v$(Build.BuildNumber)'

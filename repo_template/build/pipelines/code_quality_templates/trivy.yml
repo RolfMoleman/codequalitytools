@@ -1,0 +1,277 @@
+steps:
+
+  - task: Cache@2
+    inputs:
+      key: docker | "aquasec/trivy:latest"
+      path: $(Pipeline.Workspace)/docker
+      cacheHitVar: DOCKER_CACHE_HIT
+    condition: succeededOrFailed()
+    displayName: Cache Docker images
+    enabled: true
+    name: "cache_docker"
+
+  - script: |
+              docker load -i $(Pipeline.Workspace)/docker/cache.tar
+    condition: and(not(canceled()), eq(variables.DOCKER_CACHE_HIT, 'true'))
+    continueOnError: true
+    displayName: Restore Docker image
+    enabled: true
+    name: "load_dockercache"
+
+  - script: |
+      mkdir TrivyScanReport
+      chmod a+w TrivyScanReport
+      outputTypes=("default" "html" "json" "junit" "sarif" "screen" "table")
+      
+      for str in ${outputTypes[@]}; do
+        
+        if [[ "$str" == "default" ]]; then
+        echo "Performing Trivy scan with output type of: ${str} "
+          docker run \
+          --volume $(pwd):/repo \
+          --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
+          --volume /var/run/docker.sock:/var/run/docker.sock \
+          aquasec/trivy:latest filesystem \
+          --output /reports/Trivy-Report-$(environment_tag).txt \
+          --security-checks vuln,config,secret,license \
+          --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
+          --vuln-type os,library \
+          --license-full \
+          /repo
+
+        elif [[ "$str" == "html" ]]; then
+          echo "Performing Trivy scan with output type of: ${str} "
+          docker run \
+          --volume $(pwd):/repo \
+          --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
+          --volume /var/run/docker.sock:/var/run/docker.sock \
+          aquasec/trivy:latest filesystem \
+          --format template \
+          --template "@contrib/html.tpl" \
+          --output /reports/Trivy-Report-$(environment_tag).xml \
+          --list-all-pkgs \
+          --security-checks vuln,config,secret,license \
+          --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
+          --vuln-type os,library \
+          --license-full \
+          /repo
+
+        elif [[ "$str" == "json" ]]; then
+          echo "Performing Trivy scan with output type of: ${str} "
+          docker run \
+          --volume $(pwd):/repo \
+          --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
+          --volume /var/run/docker.sock:/var/run/docker.sock \
+          aquasec/trivy:latest filesystem \
+          --format $str \
+          --output /reports/Trivy-Report-$(environment_tag).json \
+          --list-all-pkgs \
+          --security-checks vuln,config,secret,license \
+          --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
+          --vuln-type os,library \
+          --license-full \
+          /repo
+
+        elif [[ "$str" == "junit" ]]; then
+          echo "Performing Trivy scan with output type of: ${str} "
+          docker run \
+          --volume $(pwd):/repo \
+          --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
+          --volume /var/run/docker.sock:/var/run/docker.sock \
+          aquasec/trivy:latest filesystem \
+          --format template \
+          --template "@contrib/junit.tpl" \
+          --output /reports/Trivy-Report-$(environment_tag).xml \
+          --list-all-pkgs \
+          --security-checks vuln,config,secret,license \
+          --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
+          --vuln-type os,library \
+          --license-full \
+          /repo
+
+        elif [[ "$str" == "sarif" ]]; then
+          echo "Performing Trivy scan with output type of: ${str} "
+          docker run \
+          --volume $(pwd):/repo \
+          --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
+          --volume /var/run/docker.sock:/var/run/docker.sock \
+          aquasec/trivy:latest filesystem \
+          --format $str \
+          --output /reports/Trivy-Report-$(environment_tag).sarif \
+          --list-all-pkgs \
+          --security-checks vuln,config,secret,license \
+          --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
+          --vuln-type os,library \
+          --license-full \
+          /repo
+          
+        elif [[ "$str" == "screen" ]]; then
+          echo "Performing Trivy scan with output type of: ${str} "
+          docker run \
+          --volume $(pwd):/repo \
+          --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
+          --volume /var/run/docker.sock:/var/run/docker.sock \
+          aquasec/trivy:latest filesystem \
+          --security-checks vuln,config,secret,license \
+          --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
+          --vuln-type os,library \
+          --license-full \
+          /repo
+
+        elif [[ "$str" == "table" ]]; then
+          echo "Performing Trivy scan with output type of: ${str} "
+          docker run \
+          --volume $(pwd):/repo \
+          --volume $(System.DefaultWorkingDirectory)/TrivyScanReport:/reports \
+          --volume /var/run/docker.sock:/var/run/docker.sock \
+          aquasec/trivy:latest filesystem \
+          --format $str \
+          --output /reports/Trivy-Report-table-$(environment_tag).txt \
+          --security-checks vuln,config,secret,license \
+          --severity UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL \
+          --vuln-type os,library \
+          --license-full \
+          /repo
+          
+      else
+          echo "output type not known"
+      fi
+      done
+    condition: succeededOrFailed()
+    displayName: "Trivy Scan Report"
+    enabled: true
+    name: "Trivy_Scan"
+    workingDirectory: "$(System.DefaultWorkingDirectory)"
+
+  - script: |
+      Write-Host ("##vso[task.setvariable variable=task.Trivy_Scan.status]failure")             
+    condition: failed()
+    continueOnError: true
+    displayName: Trivy failure check
+    enabled: true
+    name: "if_trivyfail"
+
+  - script: |
+      mkdir -p $(Pipeline.Workspace)/docker
+      docker save --output $(Pipeline.Workspace)/docker/cache.tar aquasec/trivy:latest              
+    condition: and(not(canceled()), or(failed(), ne(variables.DOCKER_CACHE_HIT, 'true')))
+    continueOnError: true
+    displayName: Save Docker image
+    enabled: true
+    name: "save_dockerimage"
+
+  # Create work items to review failures
+  - task: CreateWorkItem@1
+    condition: and(eq(variables['task.Trivy_Scan.status'], 'failure'), succeededOrFailed())
+    displayName: 'Create work item'
+    enabled: true
+    inputs:
+      #teamProject: # Optional
+      workItemType: 'Product Backlog Item'
+      title: 'Review Trivy failures for $(project_repo) repository'
+      #assignedTo: # Optional
+      #areaPath: # Optional
+      #iterationPath: # Optional
+      fieldMappings: "Description=Please review the attached files and linked build" # Optional; Required if your process defines additional required work item fields
+      associate: true # Optional
+      associationType: 'foundinbuild' # Optional; Valid values: build, integratedInBuild, foundInBuild
+      # ===== Linking Inputs =====
+      #linkWorkItems: false # Optional
+      #linkType: # Required if linkWorkItems = true
+      #linkTarget: id # Optional; Valid values: id, wiql
+      #targetId: # Required if linkWorkItems = true and linkTarget = id
+      #targetWiql: # Required if linkWorkItems = true and linkTarget = wiql
+      limitWorkItemLinksToSameProject: true # Optional
+      linkPR: true # Optional
+      #linkCode: true # Optional
+      #commitsAndChangesets: # Required if linkCode = true
+      # ===== Attachments Inputs =====
+      addAttachments: true # Optional
+      attachmentsFolder: "$(System.DefaultWorkingDirectory)/TrivyScanReport/" # Optional
+      attachments: '*.*' # Required if addAttachments = true
+      # ===== Duplicate Inputs =====
+      preventDuplicates: true
+      keyFields: |
+        System.AreaPath
+        System.IterationPath
+        System.Title 
+      updateDuplicates: true # Optional
+      #updateRules: # Optional
+      # ===== Outputs Inputs =====
+      createOutputs: true # Optional
+      outputVariables: 'workItemId=ID' # Required if createOutputs = true
+      # ===== Advanced Inputs =====
+      #authToken: #Optional
+      #allowRedirectDowngrade: false # Optional
+
+#publish trivy Scan
+  - task: PublishBuildArtifacts@1
+    condition: succeededOrFailed()
+    displayName: "Publish Trivy Scan"
+    enabled: true
+    name: "Publish_trivy_report"
+    inputs:
+      PathtoPublish: "$(System.DefaultWorkingDirectory)/TrivyScanReport/"
+      ArtifactName: "TrivyReport-$(environment_tag)"
+      publishLocation: "container"
+
+  #copy sarif files to sarif directory to avoid polluting CodeAnalysisLogs
+  - task: Powershell@2
+    condition: succeededOrFailed()
+    displayName: "Copy Sarif Files"
+    enabled: true
+    inputs:
+      targetType: 'inline'
+      script: |
+        cd $(System.DefaultWorkingDirectory)/TrivyScanReport
+        $files = dir
+        mkdir sarif
+        ForEach($file in $files)
+        {
+          if($file.extension.Contains("sarif"))
+          {
+              Copy-Item -Path $file.FullName -Destination sarif -force
+          }
+          else
+          {
+              Write-output $file.FullName "does not need moving"
+          }      
+        }
+      showWarnings: true
+      pwsh: true
+      workingDirectory: '$(System.DefaultWorkingDirectory)'
+
+  #publish trivy Scan Results
+  - task: PublishBuildArtifacts@1
+    condition: succeededOrFailed()
+    displayName: "Publish Trivy Scan"
+    enabled: true
+    name: "Publish_trivy_scan"
+    inputs:
+      PathtoPublish: "$(System.DefaultWorkingDirectory)/TrivyScanReport/sarif"
+      ArtifactName: "CodeAnalysisLogs"
+      publishLocation: "container"
+
+  # Publish the results of the Trivy analysis as Test Results to the pipeline
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    displayName: "Publish Trivy Test Results"
+    enabled: true
+    name: "Publish_trivy_Test_Results"
+    inputs:
+      testResultsFormat: "junit" # Options JUnit, NUnit, VSTest, xUnit, cTest
+      testResultsFiles: "**/*Trivy-Report-$(environment_tag).xml"
+      searchFolder: "$(System.DefaultWorkingDirectory)/TrivyScanReport"
+      testRunTitle: "Trivy Scan"
+      mergeTestResults: false
+      failTaskOnFailedTests: false
+      publishRunAttachments: true
+
+  # Clean up any of the containers / images that were used for quality checks
+  - bash: |
+      docker rmi "aquasec/trivy:latest" --format | true
+    condition: succeededOrFailed()
+    displayName: "Remove terraform Quality Check Docker Images"
+    enabled: true
+    name: "Remove_terraform_Quality_Check_Docker_Images"
+    workingDirectory: "$(System.DefaultWorkingDirectory)"

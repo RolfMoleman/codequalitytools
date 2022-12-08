@@ -1,0 +1,179 @@
+##
+## Dependabot automated dependency updater
+##
+
+# Source Documentation
+# https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot
+# https://sanderh.dev/Dependabot-Azure-DevOps/
+# https://www.youtube.com/watch?v=4ELai1FivK4
+# https://github.com/dependabot/dependabot-script
+# https://techcommunity.microsoft.com/t5/azure-devops-blog/keeping-your-dependencies-updated-with-azure-pipelines-and/ba-p/3590020
+
+# Display name when the pipeline is running
+name: 'Dependabot -- $(Date:yyyyMMdd)$(Rev:.r)'
+
+pool:
+  vmImage: "ubuntu-latest"
+
+schedules:
+- cron: "0 1 * * */4 "
+  # at 01:00 UTC every wednesday
+  displayName: Weekly Dependabot run
+  batch: false
+  # run even when there are no code changes
+  always: true
+  # run only on these branches
+  branches:
+    include:
+      - "*"
+
+jobs:
+  - job: 'Dependabot'
+    pool:
+      # requires macos or ubuntu (windows is not supported)
+      vmImage: 'ubuntu-latest'
+
+    # Vars to be passed to the docker image
+    variables:
+    - name: DIRECTORY_PATH
+      value: /
+    - name: PACKAGE_MANAGER
+      value: terraform
+    # On Azure DevOps this should be the: <Org>/<Project>/_git/<Repo_Name>
+    - name: PROJECT_PATH
+      value: bcagroup/BCA.Operations.Utilities/_git/repo_template
+    # Who "Opened" the Pull request. Useful to assign to a service account named "Dependabot"
+    - name: PULL_REQUESTS_ASSIGNEE
+      value: 'Dependabot'
+
+    steps:
+    
+      #checkout
+      - checkout: self
+        persistCredentials: true
+
+      # Git Config
+      - script: |
+          echo "set git config to Dependabot user"
+          git config --global user.email "Dependabot@bca.com"
+          git config --global user.name "Dependabot"
+        condition: succeededOrFailed()
+        displayName: "Set git config for dependabot user"
+        enabled: true
+        name: "configure_gituser"
+
+      - task: CreateWorkItem@1
+        condition: succeededOrFailed()
+        displayName: "Create work item"
+        enabled: true
+        inputs:
+          #teamProject: # Optional
+          workItemType: "Product Backlog Item"
+          title: "Review Dependabot updates for $(project_repo) repository"
+          #assignedTo: # Optional
+          #areaPath: # Optional
+          #iterationPath: # Optional
+          fieldMappings: |
+                          "Description=Please review the attached files and linked build" # Optional; Required if your process defines additional required work item fields                          Tags=dependabot; dependencies
+          associate: true # Optional
+          associationType: "foundinbuild" # Optional; Valid values: build, integratedInBuild, foundInBuild
+          # ===== Linking Inputs =====
+          #linkWorkItems: false # Optional
+          #linkType: # Required if linkWorkItems = true
+          #linkTarget: id # Optional; Valid values: id, wiql
+          #targetId: # Required if linkWorkItems = true and linkTarget = id
+          #targetWiql: # Required if linkWorkItems = true and linkTarget = wiql
+          limitWorkItemLinksToSameProject: true # Optional
+          linkPR: true # Optional
+          #linkCode: true # Optional
+          #commitsAndChangesets: # Required if linkCode = true
+          # ===== Attachments Inputs =====
+          #addAttachments: true # Optional
+          #attachmentsFolder: "$(System.DefaultWorkingDirectory)/TFSecReport/" # Optional
+          #attachments: "*.*" # Required if addAttachments = true
+          # ===== Duplicate Inputs =====
+          preventDuplicates: true # Optional
+          keyFields: |
+            System.AreaPath
+            System.IterationPath
+            System.Title 
+            # Required if preventDuplicates = true
+          #updateDuplicates: false # Optional
+          #updateRules: # Optional
+          # ===== Outputs Inputs =====
+          createOutputs: true # Optional
+          outputVariables: 'workItemId=ID' # Required if createOutputs = true
+          # ===== Advanced Inputs =====
+          #authToken: #Optional
+          #allowRedirectDowngrade: false # Optional
+          
+
+      - task: Cache@2
+        inputs:
+          key: docker | "dependabot/dependabot-core:latest"
+          path: $(Pipeline.Workspace)/docker
+          cacheHitVar: DOCKER_CACHE_HIT
+        condition: succeededOrFailed()
+        displayName: Cache Docker images
+        enabled: true
+        name: "cache_docker"
+
+      - script: |
+                  docker load -i $(Pipeline.Workspace)/docker/dependabot-azure-devops.tar
+        condition: and(not(canceled()), eq(variables.CACHE_RESTORED, 'true'))
+        continueOnError: true # This seems necessary to let the pipeline continue on first pipeline execution since the cache.tar will be missing.
+        displayName: Restore Docker image
+        enabled: true
+        name: "load_dockercache"
+
+      - script: |
+                  if [[ "$SYSTEM_COLLECTIONURI" == *"dev.azure.com"* ]]; then
+                  echo "Using new URL"
+                  ORGANISATION=`echo "${SYSTEM_COLLECTIONURI:23}"`
+                  
+                  elif [[ "$SYSTEM_COLLECTIONURI" == *"visualstudio.com"* ]]; then
+                      echo "Using OLD URL"
+                      ORGANISATION=`echo $SYSTEM_COLLECTIONURI | grep -oP '(?<=//).*(?=.visualstudio.com)'`
+
+                  else
+                    echo "URL not known"
+
+                  fi
+                  echo '##vso[task.setvariable variable=organisation]$ORGANISATION'
+        condition: succeededOrFailed()
+        continueOnError: true # This seems necessary to let the pipeline continue on first pipeline execution since the cache.tar will be missing.
+        displayName: Set organisation variable
+        enabled: true
+        name: "set_organisation"
+
+      # Pass your vars to the docker image and execute
+      - script: |
+          docker run --rm -t \
+           -e AZURE_PROTOCOL=https \
+           -e AZURE_HOSTNAME=$(SYSTEM.COLLECTIONURI) \
+           -e AZURE_ACCESS_TOKEN=$(System.AccessToken) \
+           -e AZURE_ORGANIZATION=$(organisation) \
+           -e AZURE_PROJECT=$(SYSTEM.TEAMPROJECT) \
+           -e AZURE_REPOSITORY=$(BUILD.REPOSITORY_NAME) \
+           -e DEPENDABOT_PACKAGE_MANAGER=<your-package-manager-here> \
+           -e DEPENDABOT_DIRECTORY=/ \
+           -e DEPENDABOT_VERSIONING_STRATEGY=increase \
+           -e DEPENDABOT_OPEN_PULL_REQUESTS_LIMIT=100 \
+           -e DEPENDABOT_MILESTONE=$(workItemId) \
+           -e AZURE_SET_AUTO_COMPLETE=true \
+           -e AZURE_AUTO_APPROVE_PR=false \
+           tingle/dependabot-azure-devops:latest
+        condition: succeededOrFailed()
+        displayName: "Run Dependabot"
+        enabled: true
+        name: "run_dependabot"
+        workingDirectory: "$(System.DefaultWorkingDirectory)"
+
+      - script: |
+          mkdir -p $(Pipeline.Workspace)/docker
+          docker save -o $(Pipeline.Workspace)/docker/dependabot-azure-devops.tar tingle/dependabot-azure-devops:latest
+        condition: and(not(canceled()), or(failed(), ne(variables.DOCKER_CACHE_HIT, 'true')))
+        continueOnError: true
+        displayName: Save Docker image
+        enabled: true
+        name: "save_dockerimage"  

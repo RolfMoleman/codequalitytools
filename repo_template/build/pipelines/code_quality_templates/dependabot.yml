@@ -1,0 +1,80 @@
+steps:
+  # Dependabot automated dependency updater
+##
+# Source Documentation
+# https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot
+# https://sanderh.dev/Dependabot-Azure-DevOps/
+# https://www.youtube.com/watch?v=4ELai1FivK4
+# https://github.com/dependabot/dependabot-script
+# https://techcommunity.microsoft.com/t5/azure-devops-blog/keeping-your-dependencies-updated-with-azure-pipelines-and/ba-p/3590020
+
+      - checkout: self
+        persistCredentials: true
+
+      # Git Config
+      - script: |
+          echo "set git config to Dependabot user"
+          git config --global user.email "Dependabot@bca.com"
+          git config --global user.name "Dependabot"
+        condition: succeededOrFailed()
+        displayName: "Set git config for dependabot user"
+        enabled: true
+        name: "configure_gituser"
+
+      # Get the repo
+      - script: git clone https://github.com/dependabot/dependabot-script.git
+        condition: succeededOrFailed()
+        displayName: "Clone Dependabot config repo"
+        enabled: true
+        name: "clone_dependabot"
+        workingDirectory: "$(System.DefaultWorkingDirectory)"
+      
+      - task: Cache@2
+        inputs:
+          key: docker | "dependabot/dependabot-core:latest"
+          path: $(Pipeline.Workspace)/docker
+          cacheHitVar: DOCKER_CACHE_HIT
+        condition: succeededOrFailed()
+        displayName: Cache Docker images
+        enabled: true
+        name: "cache_docker"
+
+      - script: |
+                  docker load -i $(Pipeline.Workspace)/docker/cache.tar
+        condition: and(not(canceled()), eq(variables.DOCKER_CACHE_HIT, 'true'))
+        displayName: Restore Docker image
+        enabled: true
+        name: "load_dockercache"
+
+      - script: |
+          mkdir -p $(Pipeline.Workspace)/docker
+          docker pull -q dependabot/dependabot-core:latest
+          docker save -o $(Pipeline.Workspace)/docker/cache.tar dependabot/dependabot-core:latest
+        condition: and(not(canceled()), or(failed(), ne(variables.DOCKER_CACHE_HIT, 'true')))
+        displayName: Save Docker image
+        enabled: true
+        name: "save_dockerimage"  
+
+      # Pass your vars to the docker image and execute
+      - script: |
+          cd dependabot-script
+          docker run --user $(id -u):$(id -g) \
+                    -v "$(pwd):/home/dependabot/dependabot-script" \
+                    -w /home/dependabot/dependabot-script dependabot/dependabot-core bundle install \
+                    -j 3 \
+                    --path vendor
+        condition: succeededOrFailed()
+        displayName: "install dependencies"
+        enabled: true
+        name: "install_dependencies"
+        workingDirectory: "$(System.DefaultWorkingDirectory)"
+
+      - task: Bash@3
+        condition: succeededOrFailed()
+        displayName: "run dependabot"
+        enabled: true
+        env:
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+        inputs: 
+          filePath: '$(System.DefaultWorkingDirectory)/repo_template/build/scripts/dependabot-devops.sh'
+        name: "run_dependabot"

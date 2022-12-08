@@ -1,0 +1,99 @@
+steps:
+  - task: qetza.replacetokens.replacetokens-task.replacetokens@5
+    condition: succeededOrFailed()
+    displayName: "Replace variablised versions in terraform"
+    enabled: true
+    name: "Terraform_Version_replacement"
+    inputs:
+      rootDirectory: '$(System.DefaultWorkingDirectory)/repo_template/build/terraform'
+      targetFiles: '**/*.tf'
+      encoding: 'auto'
+      tokenPattern: 'rm'
+      writeBOM: true
+      escapeType: 'none'
+      actionOnMissing: 'fail'
+      keepToken: true
+      actionOnNoFiles: 'warn'
+      enableTransforms: false
+      enableRecursion: false
+      useLegacyPattern: false
+      enableTelemetry: true
+
+  - task: AzureCLI@2
+    displayName: 'Gather Terraform settings'
+    enabled: ${{ not(parameters.testMode) }}
+    name: terraformConfig
+    inputs:
+      azureSubscription: '$(subscription_connection)'
+      scriptType: 'pscore'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        # List environment variables
+        Get-ChildItem -Path Env: -Recurse -Include ARM_*,TF_* | Sort-Object -Property Name
+        # This will write version info as output variable
+        get_tf_version.ps1 -version $(terraformVersionRequest)
+      addSpnToEnvironment: true
+      useGlobalConfig: true
+      failOnStandardError: true
+      workingDirectory: 'repo_template/build/scripts'
+  
+  - task: terraformInstaller@0
+    condition: succeededOrFailed()
+    displayName: 'Install terraform version $(terraform_installer_version)'
+    enabled: true
+    inputs:
+      terraformVersion: '$(terraform_installer_version)'
+      
+  - task: AzureCLI@2
+    displayName: 'Terraform init'
+    inputs:
+      azureSubscription: '$(subscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        # Propagate pipeline Service Principal as Terraform variables
+        $env:ARM_CLIENT_ID       ??= $env:servicePrincipalId
+        $env:ARM_CLIENT_SECRET   ??= $env:servicePrincipalKey
+        $env:ARM_TENANT_ID       ??= $env:tenantId
+        
+        # Propagate from Azure CLI context
+        $env:ARM_TENANT_ID       ??= $(az account show --query tenantId -o tsv)
+        $env:ARM_SUBSCRIPTION_ID ??= $(az account show --query id -o tsv)              
+        
+        # Perform terraform init
+        terraform init -reconfigure `
+                     -backend-config="resource_group_name=$(TF_STATE_RESOURCE_GROUP_NAME)" `
+                     -backend-config="storage_account_name=$(TF_STATE_STORAGE_ACCOUNT_NAME)" `
+                     -backend-config="container_name=$(TF_STATE_CONTAINER_NAME)" 
+
+      addSpnToEnvironment: true
+      useGlobalConfig: true
+      failOnStandardError: true
+      powerShellIgnoreLASTEXITCODE: false
+      workingDirectory: "repo_template/build/terraform"
+
+  - task: AzureCLI@2
+    condition: succeeded()
+    displayName: 'Terraform apply'
+    name: terraform_apply
+    enabled: true
+    inputs:
+      azureSubscription: '$(subscriptionConnection)'
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        terraform apply -input=false plan-$(environment_tag)
+
+        # Export Terraform output as task output
+        $terraformOutput = terraform output -json | ConvertFrom-Json -AsHashtable
+        foreach ($outputVariable in $terraformOutput.keys) {
+            $value = $terraformOutput[$outputVariable].value
+            if ($value) {
+                Write-Host "##vso[task.setvariable variable=$outputVariable;isOutput=true]$value"
+            }
+        }              
+      addSpnToEnvironment: true
+      useGlobalConfig: true
+      failOnStandardError: true
+      powerShellIgnoreLASTEXITCODE: false
+      workingDirectory: "repo_template/build/terraform"

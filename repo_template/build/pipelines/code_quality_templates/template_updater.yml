@@ -1,0 +1,56 @@
+steps:
+  - script: |
+      echo "set git config to build service user"
+      git config --global user.email "build.service@bca.com"
+      git config --global user.name "build service"
+
+      echo "add repo_template remote and fetch it"
+      git remote add -f repo_template https://dev.azure.com/bcagroup/BCA.Operations.Utilities/_git/repo_template
+
+      echo "create a pipeline update branch"
+      git checkout -b 'repo_template-master_updates'
+
+      echo "merge in BCA.Operations.Utilities/repo_template main branch but keep our changes"
+      git merge --allow-unrelated-histories -s ours repo_template/main 
+
+      echo "get updates just for code_quality_templates directory"
+      git read-tree --prefix=repo_template/build/pipelines/code_quality_templates/ -u repo_template/main:build/pipelines/code_quality_templates
+
+      echo "Adding new files from repo_template in build/pipelines/code_quality_templates that do not exist here"
+      git commit -m 'Adding new files from repo_template in build/pipelines/code_quality_templates directory'
+
+      echo "fetch "
+      git fetch repo_template main
+
+      echo "get updates just for code_quality_templates directory"
+      git read-tree --prefix=repo_template/docs/code_quality/ -u repo_template/main:docs/code_quality
+
+      echo "Adding new files from repo_template in docs/code_quality/ that do not exist here"
+      git commit -m 'Adding new files from repo_template in docs/code_quality/ directory'
+
+      echo "push updates branch"
+      git push -u origin repo_template-master_updates
+
+      echo "Remove repo_template remote"
+      git remote remove repo_template
+    condition: succeededOrFailed()
+    displayName: "pull in updates to repo_template"
+    enabled: true
+    name: "pipeline_updater"
+
+  - task: CreatePullRequest@1
+    condition: succeededOrFailed()
+    displayName: "pr to pull changes to repo_template master branch"
+    enabled: true
+    name: "repo_template_pr"
+    inputs:
+      repoType: "Azure DevOps"
+      repositorySelector: "currentBuild"
+      sourceBranch: "repo_template-master_updates"
+      targetBranch: "$(Build.SourceBranch)"
+      title: "repo_template updates"
+      description: "Merge in repo_template updates"
+      reviewers: ""
+      tags: ""
+      isDraft: false
+      passPullRequestIdBackToADO: true

@@ -1,0 +1,145 @@
+##
+## Perform terraform validate and plan on all environments
+## Also run on all normal builds that aren't on the development or master/main branches
+##
+name: $(Date:yy)-$(Date:MM)-$(Date:dd).$(Rev:r)
+pr:
+  branches:
+    include:
+      - "*"
+  paths:
+    include:
+      - "*"
+trigger:
+  batch: false
+  branches:
+    include:
+      - "*"
+    exclude:
+      #remove/comment out any branches that aren't relevant.
+      #Note: it is nice to keep development branches under a development folder and get developers to keep their own branches under a folder with their name to keep the branch view clean
+      - main
+      - master
+      - development/development
+      - development
+      - dev
+  paths:
+    include:
+      - "*"
+parameters:
+  - name: runInDev
+    displayName: Run Terraform Plan in DEV env
+    type: boolean
+    default: true
+
+  - name: runInUat
+    displayName: Run Terraform Plan in UAT env
+    type: boolean
+    default: true
+
+  - name: runInProd
+    displayName: Run Terraform Plan in PROD env
+    type: boolean
+    default: true
+
+stages:
+  #Development
+  - stage: dev_plan
+    condition: eq(${{ parameters.runInDev }}, true)
+    dependsOn:
+    displayName: "terraform_plan_dev"
+    jobs:
+      - job: dev_env_provisioning
+        timeoutInMinutes: 0
+        variables:
+          - template: iac_templates/variables.yml
+            parameters:
+              environmentTag: "dev"
+        displayName: "dev"
+        pool:
+          name: "bca-linux-pool"
+        steps:
+          - checkout: self
+          - template: iac_templates/terraform_plan.yml
+          - task: PublishPipelineArtifact@1
+            inputs:
+              path: $(System.DefaultWorkingDirectory)/repo_template/build/terraform/plan_$(environment_tag)
+              artifact: plan_$(environment_tag)
+
+  #UAT
+  - stage: uat_plan
+    condition: eq(${{ parameters.runInUat }}, true)
+    dependsOn:
+    displayName: "terraform_plan_uat"
+    jobs:
+      - job: uat_env_provisioning
+        timeoutInMinutes: 0
+        variables:
+          - template: iac_templates/variables.yml
+            parameters:
+              environmentTag: "uat"
+        displayName: "uat"
+        pool:
+          name: "bca-linux-pool"
+        steps:
+          - checkout: self
+          - template: iac_templates/terraform_plan.yml
+          - task: PublishPipelineArtifact@1
+            inputs:
+              path: $(System.DefaultWorkingDirectory)/repo_template/build/terraform/plan_$(environment_tag)
+              artifact: plan_$(environment_tag)
+
+  #Production
+  - stage: prod_plan
+    condition: eq(${{ parameters.runInProd }}, true)
+    dependsOn:
+    displayName: "terraform_plan_prod"
+    jobs:
+      - job: prod_env_provisioning
+        timeoutInMinutes: 0
+        variables:
+          - template: iac_templates/variables.yml
+            parameters:
+              environmentTag: "prod"
+        displayName: "prod"
+        pool:
+          name: "bca-linux-pool"
+        steps:
+          - checkout: self
+          - template: iac_templates/terraform_plan.yml
+          - task: PublishPipelineArtifact@1
+            inputs:
+              path: $(System.DefaultWorkingDirectory)/repo_template/build/terraform/plan_$(environment_tag)
+              artifact: plan_$(environment_tag)
+
+  - stage: add_comment
+    displayName: Add comment to PR
+    dependsOn:
+      - dev_plan
+      - uat_plan
+      - prod_plan
+    condition: |
+      and
+      (
+        succeeded('terraform_plan_dev'),
+        succeeded('terraform_plan_uat'),
+        succeeded('terraform_plan_prod'),
+        ne(variables['System.PullRequest.PullRequestId'], '')
+      )
+    pool:
+      name: "bca-linux-pool"
+    jobs:
+      - job: pull_request_commenter
+        steps:
+        - task: PowerShell@2
+          displayName: post pull request comment
+          inputs:
+            filePath: 'repo_template/build/scripts/pr-comment.ps1'
+          env:
+            SYSTEM_COLLECTION_URI: $(System.CollectionUri)
+            SYSTEM_ACCESS_TOKEN: $(System.AccessToken)
+            SYSTEM_PULL_REQUEST_ID: $(System.PullRequest.PullRequestId)
+            SYSTEM_TEAM_PROJECT: $(System.TeamProject)
+            SYSTEM_BUILD_REPOSITORY_ID: $(Build.Repository.ID)
+            SYSTEM_BUILD_ID: $(Build.BuildId)
+            COMMENT: '[IAC Pull Request] Make sure to check the terraform plans before approving.'

@@ -1,0 +1,100 @@
+##
+## Dependabot automated dependency updater
+##
+
+
+# Source Documentation
+# https://marketplace.visualstudio.com/items?itemName=tingle-software.dependabot
+# https://sanderh.dev/Dependabot-Azure-DevOps/
+# https://www.youtube.com/watch?v=4ELai1FivK4
+# https://github.com/dependabot/dependabot-script
+# https://techcommunity.microsoft.com/t5/azure-devops-blog/keeping-your-dependencies-updated-with-azure-pipelines-and/ba-p/3590020
+
+# Display name when the pipeline is running
+name: 'Dependabot -- $(Date:yyyyMMdd)$(Rev:.r)'
+
+pool:
+  vmImage: "ubuntu-latest"
+
+schedules:
+- cron: "0 1 * * */4 "
+  # at 01:00 UTC every wednesday
+  displayName: Weekly Dependabot run
+  batch: false
+  # run even when there are no code changes
+  always: true
+  # run only on these branches
+  branches:
+    include:
+      - "*"
+
+jobs:
+  - job: 'Dependabot'
+    pool:
+      # requires macos or ubuntu (windows is not supported)
+      vmImage: 'ubuntu-latest'
+
+    # Vars to be passed to the docker image
+    variables:
+    - name: DIRECTORY_PATH
+      value: /
+    - name: PACKAGE_MANAGER
+      value: maven
+    # On Azure DevOps this should be the: <Org>/<Project>/_git/<Repo_Name>
+    - name: PROJECT_PATH
+      value: bcagroup/BCA.Operations.Utilities/_git/repo_template
+    # Who "Opened" the Pull request. Useful to assign to a service account named "Dependabot"
+    - name: PULL_REQUESTS_ASSIGNEE
+      value: 'Dependabot'
+
+    steps:
+    
+      #checkout
+      - checkout: self
+        persistCredentials: true
+
+      # Git Config
+      - script: |
+          echo "set git config to Dependabot user"
+          git config --global user.email "Dependabot@bca.com"
+          git config --global user.name "Dependabot"
+        condition: succeededOrFailed()
+        displayName: "Set git config for dependabot user"
+        enabled: true
+        name: "configure_gituser"
+
+      # Get the repo
+      - script: git clone https://github.com/dependabot/dependabot-script.git
+        condition: succeededOrFailed()
+        displayName: "Clone Dependabot config repo"
+        enabled: true
+        name: "clone_dependabot"
+
+      # Build the docker image
+      - script: |
+          cd dependabot-script
+          docker build -t "dependabot/dependabot-script" -f Dockerfile .
+        condition: succeededOrFailed()
+        displayName: "Build Dependabot Image"
+        enabled: true
+        name: "build_image"
+
+      # Pass your vars to the docker image and execute
+      # NOTE:
+      #       You need to get a Person Access Token and to keep it {SECRET} use The [Variables] button in the
+      #       Azure-Pipelines interface to create a Environmental Variable that the docker image can access but
+      #       isn't in plain text. Same for the GitHub Access Token if your dependencies are only on GitHub
+      - script: |
+          docker run --rm \
+          -e AZURE_ACCESS_TOKEN='$(System.AccessToken)' \
+          -e AZURE_HOSTNAME='https://bcagroup.visualstudio.com/' \
+          -e PACKAGE_MANAGER='$(PACKAGE_MANAGER)' \
+          -e PROJECT_PATH='$(PROJECT_PATH)' \
+          -e DIRECTORY_PATH='$(DIRECTORY_PATH)' \
+          -e PULL_REQUESTS_ASSIGNEE='$(PULL_REQUESTS_ASSIGNEE)' \
+          dependabot/dependabot-script
+        condition: succeededOrFailed()
+        displayName: "Run Dependabot"
+        enabled: true
+        name: "run_dependabot"
+        

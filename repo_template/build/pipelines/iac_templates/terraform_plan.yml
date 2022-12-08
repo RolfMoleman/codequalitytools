@@ -1,0 +1,61 @@
+steps:
+  - task: qetza.replacetokens.replacetokens-task.replacetokens@5
+    condition: succeededOrFailed()
+    displayName: "Replace variablised versions in terraform"
+    enabled: true
+    name: "Terraform_Version_replacement"
+    inputs:
+      rootDirectory: '$(System.DefaultWorkingDirectory)/repo_template/build/terraform'
+      targetFiles: '**/*.tf'
+      encoding: 'auto'
+      tokenPattern: 'rm'
+      writeBOM: true
+      escapeType: 'none'
+      actionOnMissing: 'fail'
+      keepToken: true
+      actionOnNoFiles: 'warn'
+      enableTransforms: false
+      enableRecursion: false
+      useLegacyPattern: false
+      enableTelemetry: true
+  
+  - task: terraformInstaller@0
+    condition: succeededOrFailed()
+    displayName: 'Install terraform version $(terraform_installer_version)'
+    enabled: true
+    inputs:
+      terraformVersion: '$(terraform_installer_version)'
+
+  - script: |
+      terraform init \
+        -backend-config="resource_group_name=$(resource-group)" \
+        -backend-config="storage_account_name=$(storage-account)" \
+        -backend-config="container_name=$(container-name)" \
+        -backend-config="key=$(state-key)" \
+        -backend-config="access_key=$(access-key)"
+    condition: succeeded()
+    displayName: 'terraform init'
+    enabled: true
+    workingDirectory: "repo_template/build/terraform"
+
+  - script: |
+      terraform validate
+    condition: succeeded()
+    displayName: 'terraform validate'
+    enabled: true
+    workingDirectory: "repo_template/build/terraform"
+
+  - script: |
+      terraform plan -out=plan_$(environment_tag) \
+        -var="application_name=Example" \
+        -var="client_id=$(client_id)" \
+        -var="client_secret=$(client_secret)" \
+        -var="environment_tag=$(environment_tag)" \
+        -var="project_name=$(System.TeamProject)" \        
+        -var="resource_location=northeurope" \
+        -var="subscription_id=$(subscription_id)" \
+        -var="tenant_id=$(tenant_id)" \
+        -var-file=environment/default.tfvars \
+        -var-file=environment/$(environment_tag)/variables.tfvars
+    workingDirectory: "repo_template/build/terraform"
+    displayName: "terraform plan"

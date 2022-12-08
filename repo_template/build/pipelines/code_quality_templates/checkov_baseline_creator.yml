@@ -1,0 +1,270 @@
+steps:
+  # Checkov is a static code analysis tool for infrastructure-as-code.
+  # It scans cloud infrastructure provisioned using terraform, Cloudformation, Kubernetes, Serverless and ARM Templates and detects security and compliance misconfigurations.
+  # Documentation: https://github.com/bridgecrewio/checkov
+  # NOTE: If you want to skip a specific check from the analysis, include it in the command-line as follows: --skip-check CKV_AWS_70,CKV_AWS_52,CKV_AWS_21,CKV_AWS_18,CKV_AWS_19
+
+  - task: Cache@2
+    inputs:
+      key: docker | "bridgecrew/checkov:latest"
+      path: $(Pipeline.Workspace)/docker
+      cacheHitVar: DOCKER_CACHE_HIT
+    condition: succeededOrFailed()
+    displayName: Cache Docker images
+    enabled: true
+    name: "cache_docker"
+
+  - script: |
+              docker load -i $(Pipeline.Workspace)/docker/cache.tar
+    condition: and(not(canceled()), eq(variables.DOCKER_CACHE_HIT, 'true'))
+    displayName: Restore Docker image
+    enabled: true
+    name: "load_dockercache"
+    
+
+  - script: |
+      mkdir -p $(Pipeline.Workspace)/docker
+      docker pull -q bridgecrew/checkov:latest
+      docker save -o $(Pipeline.Workspace)/docker/cache.tar bridgecrew/checkov:latest             
+    condition: and(not(canceled()), or(failed(), ne(variables.DOCKER_CACHE_HIT, 'true')))
+    displayName: Save Docker image
+    enabled: true
+    name: "save_dockerimage"  
+
+  - script: |
+      mkdir CheckovReports
+      echo "Output bridgecrew variables"
+      echo "System.TeamProject: $(System.TeamProject)"
+      echo "--Repo-id: $(project_repo)"
+      echo "--branch: $(repo_branch)"
+      echo "--prisma-api-url: $(prisma_api_url)"
+      docker run \
+      --volume "$(pwd)":/Repo \
+      --volume $(System.DefaultWorkingDirectory)/CheckovReports:/reports \
+      --name bridgecrew \
+      bridgecrew/checkov:latest \
+      --bc-api-key $(bridgecrewkey) \
+      --branch "$(repo_branch)" \
+      --create-baseline \
+      --directory /Repo \
+      --include-all-checkov-policies \
+      --output cli \
+      --output cyclonedx \
+      --output json \
+      --output junitxml \
+      --output sarif \
+      --output-file-path /reports \
+      --prisma-api-url $(prisma_api_url) \
+      --Repo-id "$(project_repo)"
+      echo "Adding checkov baseline to Repo"
+      git commit -m "Adding or updating baseline [skip ci]"
+    condition: ne(variables['BRIDGECREWKEY'], '')
+    displayName: "Bridgecrew Static Code Analysis"
+    enabled: false
+    name: "Bridgecrew_Scan"
+    workingDirectory: "$(System.DefaultWorkingDirectory)"
+
+  - script: |
+      mkdir CheckovReports
+      echo "bridgecrewkey variable is not set so running normal checkov"
+      docker run \
+      --volume "$(pwd)":/Repo \
+      --volume $(System.DefaultWorkingDirectory)/CheckovReports:/reports \
+      --name checkov \
+      bridgecrew/checkov:latest \
+      --create-baseline \
+      --directory /Repo \
+      --include-all-checkov-policies \
+      --output cli \
+      --output cyclonedx \
+      --output json \
+      --output junitxml \
+      --output sarif \
+      --output-file-path /reports
+      echo "Adding checkov baseline to Repo"
+      git commit -m "Adding or updating baseline [skip ci]"
+    #condition: eq(variables['BRIDGECREWKEY'], '')
+    condition: succeededOrFailed()
+    displayName: "Checkov Static Code Analysis"
+    enabled: true
+    name: "Checkov_Scan"
+    workingDirectory: "$(System.DefaultWorkingDirectory)"
+
+  #give reports a more unique name
+  - bash: |
+      cd CheckovReports
+      for file in results_*; do
+        echo "Processing $File"
+        mv "$file" "${file/results_/Checkov-Report-$(environment_tag)-}"
+      done
+      echo "CheckovReports DIR Content:"
+      ls -la
+    condition: succeededOrFailed()
+    displayName: "Rename Checkov Reports"
+    enabled: true
+    name: "Rename_Checkov_Reports"
+    workingDirectory: "$(System.DefaultWorkingDirectory)"
+
+  # Create work items to review failures
+  - task: CreateWorkItem@1
+    condition: and(failed(), ne(variables['BRIDGECREWKEY'], ''))
+    displayName: "Create work item"
+    enabled: false
+    inputs:
+      #teamProject: # Optional
+      workItemType: "Product Backlog Item"
+      title: "Review Bridgecrew failures for $(project_repo) repository"
+      #assignedTo: # Optional
+      #areaPath: # Optional
+      #iterationPath: # Optional
+      fieldMappings: "Description=Please review the attached files and linked build" # Optional; Required if your process defines additional required work item fields
+      associate: true # Optional
+      associationType: "foundinbuild" # Optional; Valid values: build, integratedInBuild, foundInBuild
+      # ===== Linking Inputs =====
+      #linkWorkItems: false # Optional
+      #linkType: # Required if linkWorkItems = true
+      #linkTarget: id # Optional; Valid values: id, wiql
+      #targetId: # Required if linkWorkItems = true and linkTarget = id
+      #targetWiql: # Required if linkWorkItems = true and linkTarget = wiql
+      limitWorkItemLinksToSameProject: true # Optional
+      linkPR: true # Optional
+      #linkCode: true # Optional
+      #commitsAndChangesets: # Required if linkCode = true
+      # ===== Attachments Inputs =====
+      addAttachments: true # Optional
+      attachmentsFolder: "$(System.DefaultWorkingDirectory)/CheckovReports/" # Optional
+      attachments: "*.*" # Required if addAttachments = true
+      # ===== Duplicate Inputs =====
+      #preventDuplicates: false # Optional
+      #keyFields: # Required if preventDuplicates = true
+      #updateDuplicates: false # Optional
+      #updateRules: # Optional
+      # ===== Outputs Inputs =====
+      #createOutputs: false # Optional
+      #outputVariables: # Required if createOutputs = true
+      # ===== Advanced Inputs =====
+      #authToken: #Optional
+      #allowRedirectDowngrade: false # Optional
+      preventDuplicates: true
+      keyFields: |
+        System.AreaPath
+        System.IterationPath
+        System.Title 
+
+  # Create work items to review failures
+  - task: CreateWorkItem@1
+    condition: failed()
+    #condition: and(failed(), eq(variables['BRIDGECREWKEY'], ''))
+    displayName: "Create work item"
+    enabled: true
+    inputs:
+      #teamProject: # Optional
+      workItemType: "Product Backlog Item"
+      title: "Review Checkov failures for $(project_repo) repository"
+      #assignedTo: # Optional
+      #areaPath: # Optional
+      #iterationPath: # Optional
+      fieldMappings: "Description=Please review the attached files and linked build" # Optional; Required if your process defines additional required work item fields
+      associate: true # Optional
+      associationType: "foundinbuild" # Optional; Valid values: build, integratedInBuild, foundInBuild
+      # ===== Linking Inputs =====
+      #linkWorkItems: false # Optional
+      #linkType: # Required if linkWorkItems = true
+      #linkTarget: id # Optional; Valid values: id, wiql
+      #targetId: # Required if linkWorkItems = true and linkTarget = id
+      #targetWiql: # Required if linkWorkItems = true and linkTarget = wiql
+      limitWorkItemLinksToSameProject: true # Optional
+      linkPR: true # Optional
+      #linkCode: true # Optional
+      #commitsAndChangesets: # Required if linkCode = true
+      # ===== Attachments Inputs =====
+      addAttachments: true # Optional
+      attachmentsFolder: "$(System.DefaultWorkingDirectory)/CheckovReports/" # Optional
+      attachments: "*.*" # Required if addAttachments = true
+      # ===== Duplicate Inputs =====
+      #preventDuplicates: false # Optional
+      #keyFields: # Required if preventDuplicates = true
+      #updateDuplicates: false # Optional
+      #updateRules: # Optional
+      # ===== Outputs Inputs =====
+      #createOutputs: false # Optional
+      #outputVariables: # Required if createOutputs = true
+      # ===== Advanced Inputs =====
+      #authToken: #Optional
+      #allowRedirectDowngrade: false # Optional
+      preventDuplicates: true
+      keyFields: |
+        System.AreaPath
+        System.IterationPath
+        System.Title 
+
+  # Publish the Checkov report as an artifact to Azure Pipelines
+  - task: PublishBuildArtifacts@1
+    condition: succeededOrFailed()
+    displayName: "Publish Artifact: Checkov Report"
+    enabled: true
+    name: "Publish_scan_report"
+    inputs:
+      PathtoPublish: "$(System.DefaultWorkingDirectory)/CheckovReports"
+      ArtifactName: CheckovReport-$(environment_tag)
+
+  #copy sarif files to sarif directory to avoid polluting CodeAnalysisLogs
+  - task: Powershell@2
+    condition: succeededOrFailed()
+    displayName: "Copy Sarif Files"
+    enabled: true
+    inputs:
+      targetType: "inline"
+      script: |
+        cd $(System.DefaultWorkingDirectory)/CheckovReports
+        $files = dir
+        mkdir sarif
+        ForEach($file in $files)
+        {
+          if($file.extension.Contains("sarif"))
+          {
+              Copy-Item -Path $file.FullName -Destination sarif -Force
+          }
+          else
+          {
+              Write-output $file.FullName "does not need moving"
+          }      
+        }
+      showWarnings: true
+      pwsh: true
+      workingDirectory: "$(System.DefaultWorkingDirectory)"
+
+  #publish checkov Scan
+  - task: PublishBuildArtifacts@1
+    condition: succeededOrFailed()
+    displayName: "Publish checkov Scan"
+    enabled: true
+    name: "Publish_checkov_scan"
+    inputs:
+      PathtoPublish: "$(System.DefaultWorkingDirectory)/CheckovReports/sarif"
+      ArtifactName: "CodeAnalysisLogs"
+      publishLocation: "container"
+
+  # Publish the results of the Checkov analysis as Test Results to the pipeline
+  # NOTE: There is a current issue with the produced XML that fails to publish the test results correctly. Work-around is to include the Script step to remove the last 2 lines from the file before processing.
+  - task: PublishTestResults@2
+    condition: succeededOrFailed()
+    displayName: Publish Checkov Test Results
+    enabled: true
+    inputs:
+      testResultsFormat: "JUnit" # Options JUnit, NUnit, VSTest, xUnit, cTest
+      testResultsFiles: "**/*Checkov-Report-$(environment_tag)-junitxml.xml"
+      searchFolder: "$(System.DefaultWorkingDirectory)/CheckovReports"
+      mergeTestResults: false
+      testRunTitle: Checkov Scan
+      failTaskOnFailedTests: false
+      publishRunAttachments: true
+
+  # Clean up any of the containers / images that were used for quality checks
+  - bash: |
+      docker rmi "bridgecrew/checkov:latest" -f | true
+    condition: succeededOrFailed()
+    displayName: "Remove terraform Quality Check Docker Images"
+    enabled: true
+    name: "Remove_terraform_Quality_Check_Docker_Images"
+    workingDirectory: "$(System.DefaultWorkingDirectory)"

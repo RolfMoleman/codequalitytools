@@ -1,0 +1,359 @@
+##
+## Run compliance checks on all PR builds
+## Also run on all normal builds that aren't on the development or master/main branches
+##
+name: $(Date:yy)-$(Date:MM)-$(Date:dd).$(Rev:r)
+pr:
+  branches:
+    include:
+      - "*"
+  paths:
+    include:
+      - "*"
+trigger:
+  batch: false
+  branches:
+    include:
+      - "*"
+    exclude:
+      #remove/comment out any branches that aren't relevant.
+      #Note: it is nice to keep development branches under a development folder and get developers to keep their own branches under a folder with their name to keep the branch view clean
+      - main
+      - master
+      - development/development
+      - development
+      - dev
+  paths:
+    include:
+      - "*"
+
+stages:
+  ## Lightweight scanning tool that will scan multiple languages. Auto-fixing can be enabled with purchase of bridgecrew and or Prismacloud
+  - stage: checkov
+    condition: succeededOrFailed()
+    dependsOn:
+    displayName: "run checkov on dev"
+    jobs:
+      - job: checkov
+        timeoutInMinutes: 0
+        variables:
+          - name: system.debug
+            value: true
+          - name: agent.diagnostic
+            value: true  
+          - template: iac_templates/variables.yml
+            parameters:
+              environmentTag: "dev"
+        displayName: "Checkov"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - checkout: self
+            persistCredentials: true
+          - template: code_quality_templates/checkov.yml
+
+#  ## Automated dependency updater
+#  - stage: dependabot
+#    displayName: "Check dependencies"
+#    jobs:
+#      - job: 
+#        variables:
+#          - name: system.debug
+#            value: true
+#          - name: agent.diagnostic
+#            value: true  
+#          - template: iac_templates/variables.yml
+#            parameters:
+#              environmentTag: "dev"
+#        displayName: "dependabot"
+#        pool:
+#          vmImage: "ubuntu-latest"
+#        steps:
+#          - template: code_quality_templates/dependabot.yml
+
+  ## Infracost shows cloud cost estimates for Terraform.
+  - stage: infracost
+    condition: succeededOrFailed()
+    dependsOn:
+    displayName: "run infracost on dev"
+    jobs:
+      - job: infracost
+        timeoutInMinutes: 0
+        variables:
+          - name: system.debug
+            value: true
+          - name: agent.diagnostic
+            value: true
+          - template: iac_templates/variables.yml
+            parameters:
+              environmentTag: "dev"
+        displayName: "Infracost"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - checkout: self
+            persistCredentials: true
+          - template: code_quality_templates/infracost.yml
+
+  ## Lightweight scanning tool by Checkmarx that is very easy to setup and run
+  - stage: kics
+    condition: succeededOrFailed()
+    dependsOn:
+    displayName: "run kics on dev"
+    jobs:
+      - job: kics
+        timeoutInMinutes: 0
+        variables:
+          - name: system.debug
+            value: true
+          - name: agent.diagnostic
+            value: true
+          - template: iac_templates/variables.yml
+            parameters:
+              environmentTag: "dev"
+        displayName: "KICS"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - checkout: self
+            persistCredentials: true
+          - template: code_quality_templates/checkmarx_kics.yml
+
+   ## Bit slow but lints everything and has an auto-fix option
+  - stage: megalinter
+    condition: succeededOrFailed()
+    dependsOn:
+    displayName: "run MegaLinter on dev"
+    jobs:
+      - job: megalinter
+        timeoutInMinutes: 0
+        variables:
+          - name: system.debug
+            value: true
+          - name: agent.diagnostic
+            value: true
+          - template: iac_templates/variables.yml
+            parameters:
+              environmentTag: "dev"
+        displayName: "Megalinter"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - checkout: self
+            persistCredentials: true
+          - template: code_quality_templates/mega_linter.yml
+
+  ## Software composition Analysis tool
+  - stage: sonar
+    condition: succeededOrFailed()
+    dependsOn:
+    displayName: "run Sonar Cloud on dev"
+    jobs:
+      - job: sonar
+        timeoutInMinutes: 0
+        variables:
+          - name: system.debug
+            value: true
+          - name: agent.diagnostic
+            value: true
+          - template: iac_templates/variables.yml
+            parameters:
+              environmentTag: "dev"
+        displayName: "Sonar Cloud"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - checkout: self
+            persistCredentials: true
+          - template: code_quality_templates/sonar_cloud.yml
+
+  ## Lightweight scanning tool that will scan multiple languages
+  - stage: terrascan
+    condition: succeededOrFailed()
+    dependsOn:
+    displayName: "run Terrascan on dev"
+    jobs:
+      - job: terrascan
+        timeoutInMinutes: 0
+        variables:
+          - name: system.debug
+            value: true
+          - name: agent.diagnostic
+            value: true
+          - template: iac_templates/variables.yml
+            parameters:
+              environmentTag: "dev"
+        displayName: "Terrascan"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - checkout: self
+            persistCredentials: true
+          - template: code_quality_templates/terrascan.yml
+
+  ## Lightweight terraform linter
+  - stage: tflint
+    condition: succeededOrFailed()
+    dependsOn:
+    displayName: "run tflint on dev"
+    jobs:
+      - job: tflint
+        timeoutInMinutes: 0
+        variables:
+          - name: system.debug
+            value: true
+          - name: agent.diagnostic
+            value: true
+          - template: iac_templates/variables.yml
+            parameters:
+              environmentTag: "dev"
+        displayName: "TFLint"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - checkout: self
+            persistCredentials: true
+          - template: code_quality_templates/tflint.yml
+
+  ## Lightweight scanning tool that is very easy to setup and run both via pipeline and locally
+  - stage: tfsec
+    condition: succeededOrFailed()
+    dependsOn:
+    displayName: "run tfsec on dev"
+    jobs:
+      - job: tfsec
+        timeoutInMinutes: 0
+        variables:
+          - name: system.debug
+            value: true
+          - name: agent.diagnostic
+            value: true
+          - template: iac_templates/variables.yml
+            parameters:
+              environmentTag: "dev"
+        displayName: "TFSec"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - checkout: self
+            persistCredentials: true
+          - template: code_quality_templates/tfsec.yml
+            
+  ## a comprehensive security scanner. It is reliable, fast, extremely easy to use, and it works wherever you need it.
+  - stage: trivy
+    condition: succeededOrFailed()
+    dependsOn:
+    displayName: "run Trivy on dev"
+    jobs:
+      - deployment: trivy
+        environment: "dev-plan"
+        timeoutInMinutes: 0
+        variables:
+          - name: system.debug
+            value: true
+          - template: iac_templates/variables.yml
+            parameters:
+              environmentTag: "dev"
+        displayName: "Trivy"
+        pool:
+          vmImage: "ubuntu-latest"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                  persistCredentials: true
+                - template: code_quality_templates/trivy.yml
+
+  ## runs a terraform plan  and outputs the plan file. this is needed for the compliance check
+  - stage: plan
+    condition: succeededOrFailed()
+    dependsOn:
+      - checkov
+      - kics
+      - terrascan
+      - tflint
+      - tfsec
+    displayName: "terraform_plan_dev"
+    jobs:
+      - job: env
+        timeoutInMinutes: 0
+        variables:
+          - name: system.debug
+            value: true
+          - name: agent.diagnostic
+            value: true
+          - template: iac_templates/variables.yml
+            parameters:
+              environmentTag: "dev"
+        displayName: "Terraform Plan"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - checkout: self
+            persistCredentials: true
+          - template: iac_templates/terraform_plan.yml
+          - task: PublishPipelineArtifact@1
+            condition: succeeded()
+            displayName: "Publish terraform Plan"
+            enabled: true
+            name: "Publish_terraform_plan"
+            inputs:
+              path: $(System.DefaultWorkingDirectory)/repo_template/build/terraform/plan-$(environment_tag)
+              artifact: plan-$(environment_tag)  
+
+
+  ## needs a plan file to run
+  - stage: compliance_check
+    condition: succeededOrFailed()
+    displayName: 'terraform_compliance_check_dev'
+    jobs:
+    - job: compliance_check
+      timeoutInMinutes: 0
+      variables:
+        - name: system.debug
+          value: true
+        - template: iac_templates/variables.yml
+          parameters:
+            environmentTag: 'dev'
+      displayName: 'Terraform Compliance Check'
+      pool:
+        vmImage: 'ubuntu-latest'
+      steps:
+      - checkout: self
+        persistCredentials: true
+      - task: DownloadPipelineArtifact@2
+        condition: succeededOrFailed()
+        displayName: "Download terraform Plan"
+        enabled: true
+        name: "Download_terraform_plan"
+        inputs:
+          path: $(System.DefaultWorkingDirectory)/repo_template/build/terraform
+          artifact: plan-$(environment_tag)
+      - template: code_quality_templates/tfcompliancecheck.yml
+
+#  # Creates backlog items for failed tests - do not enable without discussing with the product team
+#  - stage: board_updater
+#    condition: succeededOrFailed()
+#    displayName: 'board_updater_dev'
+#    jobs:
+#    - job: board_updater
+#      timeoutInMinutes: 0
+#      variables:
+#        - name: system.debug
+#          value: true
+#        - template: iac_templates/variables.yml
+#          parameters:
+#            environmentTag: 'dev'
+#      displayName: 'Board Updater'
+#      pool:
+#        vmImage: 'ubuntu-latest'
+#      steps:
+#      - checkout: self
+#        persistCredentials: true
+#      - task: WorkItemUpdater@2
+#        inputs:
+#          workitemsSource: 'Build'
+#          workItemType: 'Task,Bug'
+#          updateAssignedTo: 'Never'
+#          updateFields: 'Microsoft.VSTS.Build.IntegrationBuild,v$(Build.BuildNumber)'
