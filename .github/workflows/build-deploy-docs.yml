@@ -1,0 +1,38 @@
+name: "DOC - Build and deploy - Beta"
+on:
+  push:
+    branches:
+      - main
+      - features/doc-versioning
+    paths:
+      - "**/build.py"
+      - "docs/**"
+      - "**.yml"
+      - "**.md"
+      - "**.json"
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.repository == 'oxsecurity/megalinter'
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v4.3.0
+        with:
+          python-version: 3.10.4
+      - run: pip install --upgrade markdown==3.3.7 mike mkdocs-material mdx_truly_sane_lists json-schema-for-humans giturlparse webpreview
+      - run: cd .automation && bash build_schemas_doc.sh && cd ..
+      # - run: mkdocs gh-deploy --force
+      - run: |
+          git config --global user.name megalinter-bot
+          git config --global user.email megalinter@megalinter.com
+      - run: mike deploy beta --push
+
+ 

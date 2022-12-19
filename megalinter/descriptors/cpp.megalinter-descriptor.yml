@@ -1,0 +1,34 @@
+descriptor_id: CPP
+descriptor_label: "C++"
+descriptor_type: language
+descriptor_flavors:
+  - cupcake
+  - dotnet
+file_extensions:
+  - ".cpp"
+  - ".h"
+  - ".cc"
+  - ".hpp"
+  - ".cxx"
+  - ".cu"
+  - ".hxx"
+  - ".c++"
+  - ".hh"
+  - ".h++"
+  - ".cuh"
+linters:
+  # CPPLINT
+  - linter_name: cpplint
+    name: CPP_CPPLINT
+    linter_url: https://github.com/cpplint/cpplint
+    linter_repo: https://github.com/cpplint/cpplint
+    linter_rules_url: https://google.github.io/styleguide/cppguide.html
+    cli_lint_mode: list_of_files
+    cli_help_arg_name: "--help"
+    cli_lint_errors_count: regex_number
+    cli_lint_errors_regex: "Total errors found: ([0-9]+)"
+    examples:
+      - "cpplint myfile.cpp"
+    install:
+      pip:
+        - cpplint

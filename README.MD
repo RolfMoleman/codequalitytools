@@ -1,4 +1,4 @@
-# project_title #
+# Code Quality Tools #
 
 <!-- AZURE DEVOPS PIPELINE BADGES -->
 <!--
@@ -43,7 +43,7 @@
 <!-- TABLE OF CONTENTS -->
 ## Table of Contents ##
 
-- [project\_title](#project_title)
+- [project\_title](#Code Quality Tools)
   - [Table of Contents](#table-of-contents)
   - [About The Project](#about-the-project)
     - [Built With](#built-with)
@@ -62,7 +62,8 @@
 
 [![Product Name Screen Shot][product-screenshot]](https://example.com)
 
-project_description
+The core purpose of this project is to deliver a docker image and set of Azure devops pipelines intended to scan code and infrastructure as code for vulnerabilities, as well as to perform unit tests and cost optimisation from one solution.
+This is intedned to be a wrapper for opensource tools provided by other development teams rather than  any tools of my own writing. However, i  may add my own tools at a later date.
 
 ---
 <!-- Readme Navigation -->

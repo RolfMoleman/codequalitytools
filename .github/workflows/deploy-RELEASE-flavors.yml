@@ -1,0 +1,110 @@
+---
+#########################
+#########################
+## Deploy Docker Image ##
+#########################
+#########################
+
+#
+# Documentation:
+# https://help.github.com/en/articles/workflow-syntax-for-github-actions
+#
+
+#######################################
+# Start the job on all push to main #
+#######################################
+name: "Build & Deploy - RELEASE - Flavors"
+on:
+  release:
+    # Want to run the automation when a release is created
+    types: ["created"]
+    paths:
+      - "Dockerfile"
+      - "megalinter/**"
+      - "flavors/**"
+      - "**/linter-versions.json"
+      - "**/.sh"
+
+###############
+# Set the Job #
+###############
+jobs:
+  build:
+    # Name the Job
+    name: Deploy Docker Image - RELEASE - Flavors
+    # Set the agent to run on
+    runs-on: ${{ matrix.os }}
+    environment: 
+      name: latest-flavors
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        # flavors-start
+        flavor:
+          [
+            "ci_light",
+            "cupcake",
+            "documentation",
+            "dotnet",
+            "go",
+            "java",
+            "javascript",
+            "php",
+            "python",
+            "ruby",
+            "rust",
+            "salesforce",
+            "security",
+            "swift",
+            "terraform",
+          ]
+# flavors-end
+    if: github.repository == 'oxsecurity/megalinter' && !contains(github.event.head_commit.message, 'skip deploy')
+    ##################
+    # Load all steps #
+    ##################
+    steps:
+      ##########################
+      # Checkout the code base #
+      ##########################
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      ###################################
+      # Run Deploy script for Dockerhub #
+      ###################################
+      - name: Deploy Release image to Dockerhub
+        env:
+          # Set the Env Vars
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          IMAGE_REPO: oxsecurity/megalinter-${{ matrix.flavor }}
+          IMAGE_VERSION: ${{ github.event.release.tag_name }}
+          DOCKERFILE_PATH: flavors/${{ matrix.flavor }}/Dockerfile
+          REGISTRY: Docker
+        shell: bash
+        run: .automation/upload-docker.sh
+
+      # Free disk space
+      - name: Free Disk space
+        shell: bash
+        run: |
+          sudo rm -rf /usr/local/lib/android  # will release about 10 GB if you don't need Android
+          sudo rm -rf /usr/share/dotnet # will release about 20GB if you don't need .NET
+
+      ##############################################
+      # Check Docker image security with Trivy #
+      ##############################################
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'docker.io/oxsecurity/megalinter-${{ matrix.flavor }}:${{ github.event.release.tag_name }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          security-checks: vuln
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+          timeout: 10m0s
+
